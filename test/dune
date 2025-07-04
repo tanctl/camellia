@@ -1,0 +1,15 @@
+(test
+ (name test_camellia)
+ (libraries ast parser compiler circuit backend alcotest))
+
+(test
+ (name test_ast)
+ (libraries ast alcotest))
+
+(test
+ (name test_error)
+ (libraries error alcotest))
+
+(test
+ (name test_parser_errors)
+ (libraries parser error alcotest))

@@ -1,0 +1,4 @@
+(executable
+ (public_name error_demo)
+ (name error_demo)
+ (libraries error))

@@ -1,0 +1,4 @@
+(executable
+ (public_name camellia)
+ (name main)
+ (libraries ast parser compiler circuit backend error))

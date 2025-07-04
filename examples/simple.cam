@@ -1,0 +1,4 @@
+// Simple ZK circuit example
+input x, y
+constraint x + y = 10
+constraint x * y = 21

@@ -1,0 +1,4 @@
+(library
+ (public_name camellia.error)
+ (name error)
+ (libraries fmt))
