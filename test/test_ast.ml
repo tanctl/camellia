@@ -28,7 +28,6 @@ let test_nested_expressions () =
   let c1 = const "1" in
   let c2 = const "2" in
   
-  (* nested expression test *)
   let nested = equal (mul (add x y) (add z c1)) c2 in
   let expected = "(((x + y) * (z + 1)) == 2)" in
   Alcotest.(check string) "nested expr" expected (expr_to_string nested);

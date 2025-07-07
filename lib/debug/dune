@@ -1,0 +1,4 @@
+(library
+ (public_name camellia.debug)
+ (name debug)
+ (libraries camellia.error camellia.ast camellia.field fmt unix))

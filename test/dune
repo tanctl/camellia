@@ -13,3 +13,11 @@
 (test
  (name test_parser_errors)
  (libraries parser error alcotest))
+
+(test
+ (name test_field)
+ (libraries field error alcotest))
+
+(test
+ (name test_debug)
+ (libraries debug ast error unix alcotest))

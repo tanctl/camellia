@@ -2,3 +2,13 @@
  (public_name error_demo)
  (name error_demo)
  (libraries error))
+
+(executable
+ (public_name field_demo)
+ (name field_demo)
+ (libraries field error))
+
+(executable
+ (public_name debug_demo)
+ (name debug_demo)
+ (libraries debug ast unix))
