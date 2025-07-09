@@ -11,8 +11,13 @@ let test_parser () =
 
 let test_compiler () =
   let circuit = Ast.{ name = "test"; inputs = ["x"]; private_inputs = []; body = [] } in
-  let compiled = Compiler.compile_circuit circuit in
-  Alcotest.(check (list (triple string string string))) "gates" [] compiled.gates
+  let debug_ctx = Debug.create_context "test" in
+  let result = Compiler.compile_circuit debug_ctx circuit in
+  match result with
+  | Ok compiled -> 
+      Alcotest.(check int) "input count" 1 (List.length compiled.input_assignments)
+  | Error _ -> 
+      Alcotest.fail "Compilation failed"
 
 let () =
   let open Alcotest in

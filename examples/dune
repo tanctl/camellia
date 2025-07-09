@@ -12,3 +12,48 @@
  (public_name debug_demo)
  (name debug_demo)
  (libraries debug ast unix))
+
+(executable
+ (public_name r1cs_demo)
+ (name r1cs_demo)
+ (libraries r1cs field error))
+
+(executable
+ (public_name debug_r1cs_validation)
+ (name debug_r1cs_validation)
+ (libraries r1cs field error))
+
+(executable
+ (public_name debug_addition_constraint)
+ (name debug_addition_constraint)
+ (libraries r1cs field error))
+
+(executable
+ (public_name debug_failing_test)
+ (name debug_failing_test)
+ (libraries r1cs field error))
+
+(executable
+ (public_name debug_missing_constant)
+ (name debug_missing_constant)
+ (libraries r1cs field error))
+
+(executable
+ (public_name compiler_demo)
+ (name compiler_demo)
+ (libraries compiler r1cs field error debug ast))
+
+(executable
+ (public_name validation_demo)
+ (name validation_demo)
+ (libraries compiler r1cs field error debug ast))
+
+(executable
+ (public_name hash_preimage_circuit)
+ (name hash_preimage_circuit)
+ (libraries compiler r1cs field error debug ast))
+
+(executable
+ (public_name edge_case_test)
+ (name edge_case_test)
+ (libraries compiler r1cs field error debug ast))

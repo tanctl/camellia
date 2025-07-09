@@ -10,4 +10,5 @@
   ocaml
   dune
   (alcotest :with-test)
-  fmt))
+  fmt
+  yojson))

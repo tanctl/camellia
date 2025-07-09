@@ -235,7 +235,7 @@ let collect_all_errors results =
   ) results;
   match !errors with
   | [] -> Ok (List.rev !oks)
-  | err :: _ -> Error err (* return first error for now *)
+  | err :: _ -> Error err
 
 let bind_error f = function
   | Ok x -> f x

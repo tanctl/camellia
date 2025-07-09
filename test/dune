@@ -21,3 +21,15 @@
 (test
  (name test_debug)
  (libraries debug ast error unix alcotest))
+
+(test
+ (name test_r1cs)
+ (libraries r1cs field error alcotest))
+
+(test
+ (name test_compiler)
+ (libraries compiler r1cs field error debug ast alcotest))
+
+(test
+ (name test_constant_reuse)
+ (libraries compiler r1cs field error debug ast alcotest))

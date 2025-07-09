@@ -1,0 +1,4 @@
+(library
+ (public_name camellia.r1cs)
+ (name r1cs)
+ (libraries camellia.error camellia.field camellia.debug fmt yojson str))

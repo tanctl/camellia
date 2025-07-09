@@ -1,4 +1,4 @@
 (library
  (public_name camellia.compiler)
  (name compiler)
- (libraries ast))
+ (libraries camellia.ast camellia.r1cs camellia.field camellia.error camellia.debug))
