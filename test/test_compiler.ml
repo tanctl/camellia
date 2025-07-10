@@ -78,7 +78,6 @@ let test_compile_add () =
   let debug_ctx = Debug.create_context "test" in
   let ctx = create_compilation_context debug_ctx in
   
-  (* setup variables *)
   let (wire1, ctx1) = allocate_wire ctx "a" R1cs.Input () |> Result.get_ok in
   let ctx2 = bind_variable ctx1 "a" wire1 |> Result.get_ok in
   let (wire2, ctx3) = allocate_wire ctx2 "b" R1cs.Input () |> Result.get_ok in
@@ -89,7 +88,6 @@ let test_compile_add () =
   check int "addition constraint count" 1 (List.length result.constraints);
   check int "total R1CS constraints" 1 (List.length new_ctx.r1cs.constraints);
   
-  (* check wire allocation for sum *)
   let wire_info = R1cs.get_wire new_ctx.wire_manager result.wire_id |> Result.get_ok in
   check bool "sum wire is intermediate" true (wire_info.wire_type = R1cs.Intermediate);
   check bool "wire name contains add" true (String.contains wire_info.name 'a')
@@ -98,7 +96,6 @@ let test_compile_mul () =
   let debug_ctx = Debug.create_context "test" in
   let ctx = create_compilation_context debug_ctx in
   
-  (* setup variables *)
   let (wire1, ctx1) = allocate_wire ctx "x" R1cs.Input () |> Result.get_ok in
   let ctx2 = bind_variable ctx1 "x" wire1 |> Result.get_ok in
   let (wire2, ctx3) = allocate_wire ctx2 "y" R1cs.Input () |> Result.get_ok in
@@ -109,7 +106,6 @@ let test_compile_mul () =
   check int "multiplication constraint count" 1 (List.length result.constraints);
   check int "total R1CS constraints" 1 (List.length new_ctx.r1cs.constraints);
   
-  (* verify constraint structure *)
   let constraint_triple = List.hd result.constraints in
   check bool "multiplication constraint A has x" true 
     (List.exists (fun (w, _) -> w = wire1) constraint_triple.a);
@@ -120,7 +116,6 @@ let test_complex_expression () =
   let debug_ctx = Debug.create_context "test" in
   let ctx = create_compilation_context debug_ctx in
   
-  (* setup variables: x, y, z *)
   let (x_wire, ctx1) = allocate_wire ctx "x" R1cs.Input () |> Result.get_ok in
   let ctx2 = bind_variable ctx1 "x" x_wire |> Result.get_ok in
   let (y_wire, ctx3) = allocate_wire ctx2 "y" R1cs.Input () |> Result.get_ok in
@@ -128,7 +123,6 @@ let test_complex_expression () =
   let (z_wire, ctx5) = allocate_wire ctx4 "z" R1cs.Input () |> Result.get_ok in
   let ctx6 = bind_variable ctx5 "z" z_wire |> Result.get_ok in
   
-  (* compile: (x + y) * z *)
   let expr = Mul (Add (Var "x", Var "y"), Var "z") in
   let (result, new_ctx) = compile_expr ctx6 expr |> Result.get_ok in
   
@@ -136,20 +130,18 @@ let test_complex_expression () =
   check int "total R1CS constraints" 2 (List.length new_ctx.r1cs.constraints);
   
   let stats = R1cs.get_r1cs_statistics new_ctx.r1cs in
-  check bool "has intermediate wires" true (stats.num_variables >= 5) (* 3 inputs + 2 intermediates *)
+  check bool "has intermediate wires" true (stats.num_variables >= 5)
 
 let test_assignment_statement () =
   let debug_ctx = Debug.create_context "test" in
   let ctx = create_compilation_context debug_ctx in
   
-  (* setup input *)
   let (x_wire, ctx1) = allocate_wire ctx "x" R1cs.Input () |> Result.get_ok in
   let ctx2 = bind_variable ctx1 "x" x_wire |> Result.get_ok in
   
   let assign_stmt = Assign ("y", Add (Var "x", Const "5")) in
   let ctx_result = compile_stmt ctx2 assign_stmt |> Result.get_ok in
   
-  (* check that y is now bound *)
   let y_wire = lookup_variable ctx_result "y" |> Result.get_ok in
   check bool "y wire allocated" true (y_wire > 0);
   
@@ -159,7 +151,6 @@ let test_constraint_statement () =
   let debug_ctx = Debug.create_context "test" in
   let ctx = create_compilation_context debug_ctx in
   
-  (* setup variables for equality *)
   let (a_wire, ctx1) = allocate_wire ctx "a" R1cs.Input () |> Result.get_ok in
   let ctx2 = bind_variable ctx1 "a" a_wire |> Result.get_ok in
   let (b_wire, ctx3) = allocate_wire ctx2 "b" R1cs.Input () |> Result.get_ok in
@@ -174,7 +165,6 @@ let test_constraint_statement () =
 let test_simple_circuit_compilation () =
   let debug_ctx = Debug.create_context "test" in
   
-  (* create simple circuit: multiply two inputs *)
   let circuit = {
     name = "test_multiply";
     inputs = ["a"; "b"];
@@ -187,12 +177,10 @@ let test_simple_circuit_compilation () =
   
   let compiled = compile_circuit debug_ctx circuit |> Result.get_ok in
   
-  (* verify structure *)
   check int "input count" 2 (List.length compiled.input_assignments);
   check int "private count" 0 (List.length compiled.private_assignments);
   check bool "has constraints" true (compiled.total_constraints > 0);
   
-  (* check input wire assignments *)
   let input_names = List.map fst compiled.input_assignments in
   check bool "has input a" true (List.mem "a" input_names);
   check bool "has input b" true (List.mem "b" input_names);
@@ -225,7 +213,6 @@ let test_poseidon_compilation () =
   let debug_ctx = Debug.create_context "test" in
   let ctx = create_compilation_context debug_ctx in
   
-  (* setup inputs *)
   let (a_wire, ctx1) = allocate_wire ctx "a" R1cs.Input () |> Result.get_ok in
   let ctx2 = bind_variable ctx1 "a" a_wire |> Result.get_ok in
   let (b_wire, ctx3) = allocate_wire ctx2 "b" R1cs.Input () |> Result.get_ok in
@@ -238,7 +225,7 @@ let test_poseidon_compilation () =
   check int "total R1CS constraints" 1 (List.length new_ctx.r1cs.constraints);
   
   let wire_info = R1cs.get_wire new_ctx.wire_manager result.wire_id |> Result.get_ok in
-  check bool "poseidon wire name" true (String.contains wire_info.name 'p') (* contains "poseidon" *)
+  check bool "poseidon wire name" true (String.contains wire_info.name 'p')
 
 let test_error_propagation () =
   let debug_ctx = Debug.create_context "test" in
@@ -258,7 +245,7 @@ let test_error_propagation () =
   match result with
   | Error err ->
       (match err.kind with
-      | UnboundVariable _ -> () (* expected *)
+      | UnboundVariable _ -> ()
       | _ -> Alcotest.fail "Wrong error type for undefined variable")
   | Ok _ -> Alcotest.fail "Should have failed with undefined variable"
 

@@ -34,3 +34,14 @@ setup.log
 
 # Local OPAM switch
 _opam/
+
+# Project-specific temporary output files
+*.json
+*.txt
+*.circom
+*.bellman
+examples/*.json
+examples/*.txt
+!examples/README.md
+!examples/*.camellia
+!examples/*.ml

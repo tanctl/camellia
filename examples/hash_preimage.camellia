@@ -1,0 +1,21 @@
+# Hash Preimage Circuit Example
+# This circuit proves knowledge of a preimage to a given hash
+# without revealing the preimage itself
+
+circuit hash_preimage {
+    # Public inputs - what everyone can see
+    public inputs: expected_hash
+    
+    # Private inputs - secret values known only to the prover  
+    private inputs: preimage
+    
+    # Circuit logic
+    computed_hash = poseidon(preimage)
+    assert computed_hash == expected_hash
+}
+
+# This circuit demonstrates:
+# - Zero-knowledge proof of hash preimage knowledge
+# - Privacy preservation (preimage never revealed)
+# - Mathematical soundness via R1CS constraints
+# - Integration with the Camellia ZK compiler

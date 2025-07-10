@@ -1,0 +1,20 @@
+# Simple Arithmetic Test Circuit
+# This circuit computes (x + y) * z and constrains the result
+
+circuit test_arithmetic {
+    # Public inputs
+    public inputs: x, y
+    
+    # Private inputs
+    private inputs: z
+    
+    # Circuit computation
+    sum = x + y
+    product = sum * z
+    assert product == 42
+}
+
+# This circuit demonstrates:
+# - Basic arithmetic operations (addition, multiplication)
+# - Mixed public and private inputs
+# - Constraint generation for equality checking

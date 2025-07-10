@@ -57,3 +57,8 @@
  (public_name edge_case_test)
  (name edge_case_test)
  (libraries compiler r1cs field error debug ast))
+
+(executable
+ (public_name hash_preimage_validation)
+ (name hash_preimage_validation)
+ (libraries compiler r1cs field error debug ast output))

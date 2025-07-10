@@ -33,3 +33,11 @@
 (test
  (name test_constant_reuse)
  (libraries compiler r1cs field error debug ast alcotest))
+
+(test
+ (name test_output)
+ (libraries output r1cs compiler field error debug ast alcotest unix yojson str))
+
+(test
+ (name test_cli_integration)
+ (libraries alcotest unix yojson str))

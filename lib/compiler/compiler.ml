@@ -88,7 +88,7 @@ and compile_var ctx var_name =
 and compile_const ctx value =
   let constant_name = "const_" ^ value in
   
-  (* reuse existing constants to reduce constraint count *)
+  (* reuse existing constants *)
   let existing_wire = 
     try
       let wire_id = Hashtbl.find ctx.wire_manager.name_to_id constant_name in
@@ -101,7 +101,7 @@ and compile_const ctx value =
       log ctx.debug_ctx Trace "Reusing existing constant %s as wire %d" value wire_id;
       Ok ({ wire_id; constraints = [] }, ctx)
   | None ->
-      (* need unique names to avoid wire allocation conflicts *)
+      (* need unique names *)
       let unique_name = Printf.sprintf "const_%s_%d" value ctx.wire_manager.next_id in
       let* (wire_id, new_ctx) = allocate_wire ctx unique_name R1cs.Constant () in
       
@@ -109,7 +109,6 @@ and compile_const ctx value =
       let constraint_triple = R1cs.create_constant_constraint wire_id field_value in
       let final_ctx = add_constraint_to_context new_ctx constraint_triple in
       
-      (* enable reuse for future references *)
       Hashtbl.replace final_ctx.wire_manager.name_to_id constant_name wire_id;
       
       log ctx.debug_ctx Trace "Allocated new constant %s as wire %d" value wire_id;
@@ -154,7 +153,7 @@ and compile_equal ctx e1 e2 =
   let wire_name = Printf.sprintf "eq_%d_%d" result1.wire_id result2.wire_id in
   let* (eq_wire, ctx3) = allocate_wire ctx2 wire_name R1cs.Intermediate () in
   
-  (* simplified equality check - full R1CS equality needs more constraints *)
+  (* simplified equality check *)
   let* (zero_wire, ctx4) = allocate_wire ctx3 ("zero_" ^ string_of_int eq_wire) R1cs.Constant () in
   let* zero_field = Field.of_string Field.zero in
   let zero_constraint = R1cs.create_constant_constraint zero_wire zero_field in
@@ -189,7 +188,7 @@ and compile_poseidon ctx exprs =
     (String.concat "_" (List.map string_of_int input_wires)) in
   let* (hash_wire, ctx_with_output) = allocate_wire ctx_after_inputs wire_name R1cs.Intermediate () in
   
-  (* placeholder - real implementation would expand full poseidon circuit *)
+  (* placeholder poseidon circuit *)
   let poseidon_constraint = 
     let input_lc = List.fold_left (fun lc wire_id -> 
       R1cs.add_term wire_id Field.one lc

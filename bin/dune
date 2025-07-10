@@ -1,4 +1,4 @@
 (executable
  (public_name camellia)
- (name main)
- (libraries ast parser compiler circuit backend error))
+ (name camellia)
+ (libraries ast parser compiler r1cs field error debug backend output yojson unix str))
