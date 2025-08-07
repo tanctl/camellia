@@ -53,3 +53,7 @@
 (test
  (name test_parser_comprehensive)
  (libraries parser ast error alcotest))
+
+(test
+ (name test_typing)
+ (libraries typing ast error alcotest))
