@@ -62,3 +62,8 @@
  (public_name hash_preimage_validation)
  (name hash_preimage_validation)
  (libraries compiler r1cs field error debug ast output))
+
+(executable
+ (public_name test_lexer_demo)
+ (name test_lexer_demo)
+ (libraries parser error ast))

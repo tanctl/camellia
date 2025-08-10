@@ -1,4 +1,18 @@
 (library
  (public_name camellia.parser)
  (name parser)
- (libraries ast error))
+ (libraries ast error)
+ (modules tokens lexer parser_impl parser))
+
+(rule
+ (targets lexer.ml)
+ (deps lexer.mll)
+ (action
+  (run ocamllex %{deps})))
+
+(rule
+ (targets parser_impl.ml parser_impl.mli)
+ (deps parser.mly)
+ (action
+  (run menhir --base parser_impl %{deps})))
+

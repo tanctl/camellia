@@ -41,3 +41,15 @@
 (test
  (name test_cli_integration)
  (libraries alcotest unix yojson str))
+
+(test
+ (name test_lexer_simple)
+ (libraries parser error alcotest))
+
+(test
+ (name test_parser_menhir)
+ (libraries parser ast error alcotest))
+
+(test
+ (name test_parser_comprehensive)
+ (libraries parser ast error alcotest))

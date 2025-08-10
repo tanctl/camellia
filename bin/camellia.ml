@@ -135,39 +135,10 @@ let write_file filename content =
       Result.Error (circuit_error ("Unexpected error writing file: " ^ Printexc.to_string exn) ())
 
 
-let create_example_circuit () =
-  {
-    name = "example_hash_preimage";
-    inputs = ["expected_hash"];
-    private_inputs = ["preimage"];
-    body = [
-      Assign ("computed_hash", Poseidon [Var "preimage"]);
-      Constraint (Equal (Var "computed_hash", Var "expected_hash"));
-    ];
-  }
-
-let contains_substring s sub =
-  try ignore (Str.search_forward (Str.regexp_string sub) s 0); true 
-  with Not_found -> false
 
 let parse_circuit_from_file filename =
   let* content = read_file filename in
-  (* parser not fully implemented *)
-  if contains_substring content "hash_preimage" || contains_substring content "preimage" then
-    Ok (create_example_circuit ())
-  else if contains_substring content "test" then
-    Ok {
-      name = "test_circuit";
-      inputs = ["x"; "y"];
-      private_inputs = ["z"];
-      body = [
-        Assign ("sum", Add (Var "x", Var "y"));
-        Assign ("product", Mul (Var "sum", Var "z"));
-        Constraint (Equal (Var "product", Const "42"));
-      ];
-    }
-  else
-    Result.Error (parse_error ("Cannot parse circuit file: " ^ filename) ())
+  Parser.parse_circuit content
 
 let compile_circuit_file options =
   let input_file = match options.input_file with

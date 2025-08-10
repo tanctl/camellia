@@ -15,7 +15,19 @@ let spec_list = [
 let compile_file filename =
   if !verbose then Printf.printf "Compiling %s...\n" filename;
   let _pos = Error.make_pos filename 1 1 in
-  match Parser.parse_circuit "valid" with
+  (* read the actual file content *)
+  let content = 
+    try
+      let ic = open_in filename in
+      let content = really_input_string ic (in_channel_length ic) in
+      close_in ic;
+      content
+    with
+    | Sys_error msg -> 
+        Printf.eprintf "File error: %s\n" msg;
+        exit 1
+  in
+  match Parser.parse_circuit content with
   | Ok circuit ->
       let debug_level = if !verbose then Debug.Debug else Debug.Warning in
       let debug_ctx = Debug.create_context ~level:debug_level filename in

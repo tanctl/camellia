@@ -1,4 +1,5 @@
 (lang dune 3.0)
+(using menhir 2.1)
 
 (name camellia)
 
@@ -9,6 +10,7 @@
  (depends
   ocaml
   dune
+  menhir
   (alcotest :with-test)
   fmt
   yojson))
