@@ -1,0 +1,8 @@
+circuit ErrorDemo {
+  inputs: x
+  
+  // undefined variable for error demo
+  result = y + 1
+  
+  assert result == 5
+}

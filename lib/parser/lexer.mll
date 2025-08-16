@@ -35,7 +35,7 @@ let letter = ['a'-'z' 'A'-'Z']
 let identifier_start = letter | '_'
 let identifier_char = letter | digit | '_'
 let field_value = digit+
-let comment_line = '#' [^ '\n' '\r']*
+let comment_line = '#' [^ '\n' '\r']* | "//" [^ '\n' '\r']*
 
 rule token = parse
   | whitespace+    { advance_column (String.length (Lexing.lexeme lexbuf)); token lexbuf }

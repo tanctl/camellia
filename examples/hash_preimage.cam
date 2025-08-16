@@ -1,0 +1,7 @@
+circuit HashPreimage {
+  inputs: expected_hash
+  private inputs: preimage
+  
+  computed_hash = poseidon(preimage)
+  assert computed_hash == expected_hash
+}

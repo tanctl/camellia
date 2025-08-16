@@ -1,0 +1,5 @@
+circuit MinimalCircuit {
+  inputs: x
+  
+  assert x == 5
+}

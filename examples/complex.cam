@@ -1,12 +1,10 @@
-// Complex ZK circuit with Poseidon hash
 circuit PrivateSum {
-  input a, b
-  private secret, nonce
+  inputs: a, b
+  private inputs: secret, nonce
   
   temp1 = a + b
   temp2 = temp1 * secret  
-  hash_input = poseidon(temp2, nonce)
+  hash_result = poseidon(temp2, nonce)
   
-  assert hash_input == target_hash
-  assert temp2 > 0
+  assert hash_result == 12345
 }

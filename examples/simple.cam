@@ -1,4 +1,9 @@
-// Simple ZK circuit example
-input x, y
-constraint x + y = 10
-constraint x * y = 21
+circuit SimpleCircuit {
+  inputs: x, y
+  
+  sum = x + y
+  product = x * y
+  
+  assert sum == 10
+  assert product == 21
+}

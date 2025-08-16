@@ -1,0 +1,20 @@
+circuit SyntaxShowcase {
+  inputs: public_a, public_b, public_c
+  private inputs: secret_x, secret_y, nonce
+  
+  sum_basic = public_a + public_b
+  diff_basic = public_a - public_b  
+  product_basic = public_a * public_b
+  complex_expr = (public_a + public_b) * (secret_x - secret_y)
+  
+  field_const = 42
+  zero_value = 0
+  large_field = 999999999
+  
+  hash_two = poseidon(secret_x, secret_y)
+  hash_many = poseidon(public_a, public_b, secret_x, secret_y, nonce)
+  
+  assert sum_basic == public_c
+  assert product_basic == 100
+  assert hash_two == 54321
+}

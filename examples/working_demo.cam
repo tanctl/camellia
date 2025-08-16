@@ -1,0 +1,9 @@
+circuit WorkingDemo {
+  inputs: public_sum, target_hash
+  private inputs: secret_a, secret_b, nonce
+  
+  computed_sum = secret_a + secret_b
+  privacy_hash = poseidon(secret_a, secret_b, nonce)
+  
+  assert computed_sum == public_sum
+}

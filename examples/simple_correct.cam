@@ -1,0 +1,6 @@
+circuit SimpleCircuit {
+  inputs: x, y
+  
+  assert x + y == 10
+  assert x * y == 21
+}

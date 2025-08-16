@@ -57,3 +57,7 @@
 (test
  (name test_typing)
  (libraries typing ast error alcotest))
+
+(test
+ (name test_syntax_integration)
+ (libraries parser compiler typing debug output error ast alcotest))
