@@ -1,7 +1,11 @@
+(* Hash preimage zero-knowledge circuit *)
 circuit HashPreimage {
-  inputs: expected_hash
-  private inputs: preimage
+  inputs: expected_hash          (* public input: the hash we're proving preimage of *)
+  private inputs: preimage       (* secret input: the preimage value *)
   
+  (* compute hash of the secret preimage *)
   computed_hash = poseidon(preimage)
+  
+  (* assert that computed hash equals the expected public hash *)
   assert computed_hash == expected_hash
 }

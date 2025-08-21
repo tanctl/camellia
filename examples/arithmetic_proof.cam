@@ -5,6 +5,6 @@ circuit ArithmeticProof {
   computed_product = factor_a * factor_b
   
   assert computed_product == known_product
-  // prevent trivial solution factor_a = 1
+  (* prevent trivial solution factor_a = 1 *)
   assert factor_a == 17
 }

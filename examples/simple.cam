@@ -1,9 +1,12 @@
+(* Simple arithmetic circuit with constraints *)
 circuit SimpleCircuit {
-  inputs: x, y
+  inputs: x, y                   (* public inputs *)
   
+  (* compute basic operations *)
   sum = x + y
   product = x * y
   
-  assert sum == 10
-  assert product == 21
+  (* assert specific values *)
+  assert sum == 10              (* sum must equal 10 *)
+  assert product == 21          (* product must equal 21 *)
 }

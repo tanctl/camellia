@@ -35,12 +35,10 @@ let letter = ['a'-'z' 'A'-'Z']
 let identifier_start = letter | '_'
 let identifier_char = letter | digit | '_'
 let field_value = digit+
-let comment_line = '#' [^ '\n' '\r']* | "//" [^ '\n' '\r']*
-
 rule token = parse
   | whitespace+    { advance_column (String.length (Lexing.lexeme lexbuf)); token lexbuf }
   | newline        { advance_line (); create_token NEWLINE }
-  | comment_line   { advance_column (String.length (Lexing.lexeme lexbuf)); token lexbuf }
+  | "(*"           { advance_column 2; comment lexbuf; token lexbuf }
   
   | identifier_start identifier_char* as s {
       advance_column (String.length s);
@@ -113,6 +111,29 @@ and string_literal acc = parse
   | _ as c { 
       advance_column 1; 
       string_literal (acc ^ String.make 1 c) lexbuf 
+    }
+
+and comment = parse
+  | "*)" { 
+      advance_column 2;
+      ()
+    }
+  | "(*" { 
+      advance_column 2;
+      comment lexbuf;
+      comment lexbuf
+    }
+  | newline {
+      advance_line ();
+      comment lexbuf
+    }
+  | eof {
+      let pos = current_pos () in
+      raise (Lexer_error ("Unterminated comment", pos))
+    }
+  | _ {
+      advance_column 1;
+      comment lexbuf
     }
 
 {

@@ -5,7 +5,7 @@ circuit RangeProof {
   diff_lower = secret_value - min_value
   diff_upper = max_value - secret_value
   
-  // simplified range check - real implementation needs bit constraints
+  (* simplified range check - real implementation needs bit constraints *)
   assert secret_value == 25
   assert min_value == 0
   assert max_value == 100

@@ -1,0 +1,12 @@
+(library
+ (public_name camellia.optimize)
+ (name optimize)
+ (libraries 
+   camellia.ast
+   camellia.error
+   camellia.debug
+   camellia.field
+   camellia.compiler
+   camellia.output
+   unix
+   str))
