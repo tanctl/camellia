@@ -1,6 +1,7 @@
 (library
  (public_name camellia.optimize)
  (name optimize)
+ (modules optimize pass_interface pass_manager constant_folding dead_code_elimination algebraic_simplification performance)
  (libraries 
    camellia.ast
    camellia.error

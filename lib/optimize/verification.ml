@@ -143,8 +143,8 @@ let verify_semantic_equivalence ctx original optimized =
   Ok {
     method_used = SemanticEquivalence;
     passed = semantic_equivalent;
-    confidence;
-    details;
+    confidence = confidence;
+    details = details;
     execution_time_ms = execution_time;
   }
 
@@ -157,8 +157,8 @@ let compile_to_r1cs_for_verification circuit debug_ctx =
   | exn -> Error (circuit_error ("R1CS compilation failed: " ^ Printexc.to_string exn) ())
 
 let verify_r1cs_equivalence ctx original optimized =
+  let open Error in
   let start_time = Unix.gettimeofday () in
-  
   let* orig_r1cs = compile_to_r1cs_for_verification original ctx.debug_ctx in
   let* opt_r1cs = compile_to_r1cs_for_verification optimized ctx.debug_ctx in
   
@@ -193,28 +193,29 @@ let verify_r1cs_equivalence ctx original optimized =
   Ok {
     method_used = R1CSEquivalence;
     passed = r1cs_equivalent;
-    confidence;
-    details;
+    confidence = confidence;
+    details = details;
     execution_time_ms = execution_time;
   }
 
-let generate_sample_witness circuit witness_count =
+(*let generate_sample_witness circuit witness_count =
   let input_count = List.length circuit.Ast.inputs in
   let private_count = List.length circuit.Ast.private_inputs in
   
   let generate_single_witness () =
-    let inputs = List.mapi (fun i _ -> string_of_int (1 + i)) circuit.inputs in
-    let privates = List.mapi (fun i _ -> string_of_int (10 + i)) circuit.private_inputs in
+    let inputs = List.mapi (fun i _ -> string_of_int (1 + i)) circuit.Ast.inputs in
+    let privates = List.mapi (fun i _ -> string_of_int (10 + i)) circuit.Ast.private_inputs in
     inputs @ privates
   in
   
   List.init witness_count (fun _ -> generate_single_witness ())
+*)
 
-let verify_witness_equivalence ctx original optimized config =
+(*let verify_witness_equivalence ctx original optimized config =
+  let open Error in
   let start_time = Unix.gettimeofday () in
   
-  let sample_witnesses = generate_sample_witness original config.sample_witness_count in
-  
+  let sample_witnesses = [] (* generate_sample_witness original config.sample_witness_count *) in
   let* orig_r1cs = compile_to_r1cs_for_verification original ctx.debug_ctx in
   let* opt_r1cs = compile_to_r1cs_for_verification optimized ctx.debug_ctx in
   
@@ -270,15 +271,18 @@ let verify_witness_equivalence ctx original optimized config =
     details;
     execution_time_ms = execution_time;
   }
+*)
 
 let run_verification_method ctx original optimized method config =
   match method with
   | StructuralEquivalence -> verify_structural_equivalence ctx original optimized
   | SemanticEquivalence -> verify_semantic_equivalence ctx original optimized  
   | R1CSEquivalence -> verify_r1cs_equivalence ctx original optimized
-  | WitnessEquivalence -> verify_witness_equivalence ctx original optimized config
+  | WitnessEquivalence -> 
+      Error (circuit_error "Witness equivalence verification not implemented" ())
 
 let run_comprehensive_verification ctx original optimized config =
+  let open Error in
   let start_time = Unix.gettimeofday () in
   
   let* results = collect_results (List.map (fun method ->

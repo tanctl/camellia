@@ -70,11 +70,11 @@ let resolve_dependencies registry pass_names =
       match get_pass registry name with
       | None -> Result.Error (Error.circuit_error ("Unknown pass: " ^ name) ())
       | Some pass ->
-          let* deps = collect_results (List.map (resolve_pass visited) pass.dependencies) in
+          let* deps = collect_results (List.map (fun dep_name -> resolve_pass dep_name (name :: visited)) pass.dependencies) in
           Ok (List.flatten deps @ [name])
   in
   
-  let* resolved_lists = collect_results (List.map (resolve_pass []) pass_names) in
+  let* resolved_lists = collect_results (List.map (fun pass_name -> resolve_pass pass_name []) pass_names) in
   let flattened = List.flatten resolved_lists in
   let unique_ordered = List.fold_left (fun acc name ->
     if List.mem name acc then acc else acc @ [name]
@@ -104,7 +104,7 @@ let filter_enabled_passes registry config =
   ) registry.pass_order
 
 let execute_single_pass ctx pass circuit =
-  let start_time = Unix.gettimeofday () in
+  let _start_time = Unix.gettimeofday () in
   
   let* result = measure_pass_execution ctx pass circuit in
   

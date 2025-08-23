@@ -1,4 +1,4 @@
-open Error
+(* performance measurement for optimization passes *)
 open Debug
 open Pass_interface
 
@@ -153,7 +153,7 @@ let measure_verification_performance perf_ctx verification_name f =
   
   (result, execution_time)
 
-let calculate_pass_performance perf_ctx pass_name stats wall_time cpu_time memory_allocated memory_peak =
+let calculate_pass_performance _perf_ctx pass_name stats wall_time cpu_time memory_allocated memory_peak =
   let expressions_per_second = if wall_time > 0.0 then 
     float_of_int stats.expressions_processed /. (wall_time /. 1000.0) else 0.0 in
   let statements_per_second = if wall_time > 0.0 then 
@@ -189,10 +189,10 @@ let analyze_pipeline_performance perf_ctx result =
         let peak = List.fold_left (fun acc sample -> 
           max acc sample.memory_usage_bytes) 0 samples in
         (wall, cpu, peak)
-    | _ -> (result.total_statistics.execution_time_ms, 0.0, 0)
+    | _ -> (result.Pass_manager.total_statistics.Pass_interface.execution_time_ms, 0.0, 0)
   in
   
-  let total_memory_allocated = List.fold_left (fun acc (_, stats) ->
+  let total_memory_allocated = List.fold_left (fun acc (_, _stats) ->
     acc + 1000000 (* rough estimate per pass *)
   ) 0 result.passes_executed in
   

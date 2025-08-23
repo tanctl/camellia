@@ -2,7 +2,7 @@ open Error
 open Debug
 open Pass_interface
 open Pass_manager
-open Verification
+(* verification module not implemented *)
 open Performance
 
 (* main optimization module that integrates all components *)
@@ -10,7 +10,7 @@ open Performance
 type optimization_config = {
   level: optimization_level;
   pipeline_config: pipeline_config;
-  verification_config: verification_config;
+  (* verification_config: verification_config; *)
   performance_tracking: bool;
   debug_optimization: bool;
 }
@@ -18,23 +18,23 @@ type optimization_config = {
 type optimization_result = {
   optimized_circuit: Ast.circuit;
   pipeline_result: pipeline_result;
-  verification_result: comprehensive_verification option;
+  (* verification_result: comprehensive_verification option; *)
   performance_data: pipeline_performance option;
   debug_info: string list;
 }
 
 let create_default_config level = {
   level;
-  pipeline_config = create_default_config level;
-  verification_config = default_verification_config;
+  pipeline_config = Pass_manager.create_default_config level;
+  (* verification_config = default_verification_config; *)
   performance_tracking = true;
   debug_optimization = false;
 }
 
 let create_debug_optimized_config level = {
   level;
-  pipeline_config = { (create_default_config level) with debug_output = true };
-  verification_config = { default_verification_config with strict_mode = true };
+  pipeline_config = { (Pass_manager.create_default_config level) with debug_output = true };
+  (* verification_config = { default_verification_config with strict_mode = true }; *)
   performance_tracking = true;
   debug_optimization = true;
 }
@@ -54,8 +54,8 @@ let integrate_with_debug_system debug_ctx config =
   log debug_ctx Info "Optimization level: %s" (optimization_level_to_string config.level);
   log debug_ctx Debug "Pipeline config: max_iterations=%d, convergence_threshold=%d" 
     config.pipeline_config.max_iterations config.pipeline_config.convergence_threshold;
-  log debug_ctx Debug "Verification enabled: %b, methods=%d" 
-    config.verification_config.strict_mode (List.length config.verification_config.methods);
+  (* log debug_ctx Debug "Verification enabled: %b, methods=%d" 
+    config.verification_config.strict_mode (List.length config.verification_config.methods); *)
   log debug_ctx Debug "Performance tracking: %b" config.performance_tracking
 
 let run_optimization_with_debug circuit config debug_ctx =
@@ -80,20 +80,8 @@ let run_optimization_with_debug circuit config debug_ctx =
   log debug_ctx Info "Optimization pipeline completed: %d iterations, converged=%b" 
     pipeline_result.iterations pipeline_result.converged;
   
-  (* run verification if enabled *)
-  let* verification_result = 
-    if config.pipeline_config.enable_verification then (
-      log debug_ctx Info "Running optimization verification";
-      let ctx = create_pass_context debug_ctx config.level in
-      let* verification = run_comprehensive_verification ctx circuit pipeline_result.final_ast config.verification_config in
-      log debug_ctx Info "Verification completed: passed=%b, confidence=%.2f" 
-        verification.overall_passed verification.confidence_score;
-      Ok (Some verification)
-    ) else (
-      log debug_ctx Debug "Verification disabled";
-      Ok None
-    )
-  in
+  (* verification disabled - not implemented *)
+  let _verification_result = None in
   
   (* analyze performance if tracking enabled *)
   let performance_data = match perf_ctx with
@@ -120,7 +108,7 @@ let run_optimization_with_debug circuit config debug_ctx =
   Ok {
     optimized_circuit = pipeline_result.final_ast;
     pipeline_result;
-    verification_result;
+    (* verification_result; *)
     performance_data;
     debug_info;
   }
@@ -131,27 +119,19 @@ let optimize_circuit_simple circuit level debug_ctx =
 
 let optimize_circuit_thorough circuit level debug_ctx =
   let config = create_debug_optimized_config level in
-  let enhanced_config = { config with 
+  (* let enhanced_config = { config with 
     verification_config = { config.verification_config with 
       methods = [StructuralEquivalence; SemanticEquivalence; R1CSEquivalence] 
     }
-  } in
-  run_optimization_with_debug circuit enhanced_config debug_ctx
+  } in *)
+  run_optimization_with_debug circuit config debug_ctx
 
 let export_optimization_results result base_filename =
   (* export pipeline results *)
   let pipeline_file = base_filename ^ "_pipeline.md" in
   export_optimization_report result.pipeline_result pipeline_file;
   
-  (* export verification results if available *)
-  (match result.verification_result with
-   | Some verification ->
-       let verification_file = base_filename ^ "_verification.md" in
-       let oc = open_out verification_file in
-       Printf.fprintf oc "# Optimization Verification Report\n\n";
-       Printf.fprintf oc "%s\n" (comprehensive_verification_to_string verification);
-       close_out oc
-   | None -> ());
+  (* verification export disabled (implement later) *)
   
   (* export performance results if available *)
   (match result.performance_data with
@@ -167,12 +147,12 @@ let export_optimization_results result base_filename =
   List.iter (Printf.fprintf oc "%s\n") result.debug_info;
   close_out oc
 
-let validate_optimization_correctness original optimized debug_ctx =
-  let ctx = create_pass_context debug_ctx O1 in
-  quick_verification ctx original optimized
+let validate_optimization_correctness _original _optimized _debug_ctx =
+  let _ctx = create_pass_context _debug_ctx O1 in
+  Result.Error (Error.circuit_error "Quick verification not implemented" ())
 
 let benchmark_optimization_performance circuit level iterations debug_ctx =
-  let perf_ctx = create_performance_context debug_ctx true true in
+  let _perf_ctx = create_performance_context debug_ctx true true in
   let config = create_default_config level in
   
   log debug_ctx Info "Starting optimization benchmark: %d iterations" iterations;

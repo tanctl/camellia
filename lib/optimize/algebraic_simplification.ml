@@ -1,4 +1,4 @@
-open Error
+(* algebraic simplification optimization pass *)
 open Debug
 open Pass_interface
 

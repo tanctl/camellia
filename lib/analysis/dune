@@ -1,0 +1,4 @@
+(library
+ (public_name camellia.analysis)
+ (name analysis)
+ (libraries camellia.ast camellia.r1cs camellia.field camellia.error camellia.debug))

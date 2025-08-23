@@ -12,6 +12,7 @@ type command =
   | Verify
   | Debug
   | Stats
+  | Analyze
   | Help
   | Version
 
@@ -25,6 +26,8 @@ type cli_options = {
   quiet: bool;
   show_stats: bool;
   export_all: bool;
+  analysis_depth: [`Quick | `Full | `Deep];
+  export_analysis: bool;
 }
 
 let default_options = {
@@ -37,6 +40,8 @@ let default_options = {
   quiet = false;
   show_stats = false;
   export_all = false;
+  analysis_depth = `Full;
+  export_analysis = false;
 }
 
 let print_version () =
@@ -55,6 +60,7 @@ let print_help () =
   printf "    verify     Validate R1CS output mathematically\n";
   printf "    debug      Show detailed compilation process\n";
   printf "    stats      Display circuit statistics and analysis\n";
+  printf "    analyze    Comprehensive circuit analysis with security and performance metrics\n";
   printf "    help       Show this help message\n";
   printf "    version    Show version information\n";
   printf "\n";
@@ -66,6 +72,8 @@ let print_help () =
   printf "    -q, --quiet                Suppress non-essential output\n";
   printf "    -s, --stats                Include circuit statistics\n";
   printf "    -a, --all                  Export all formats\n";
+  printf "    --analysis-depth <LEVEL>   Analysis depth [quick|full|deep]\n";
+  printf "    --export-analysis          Export detailed analysis report\n";
   printf "    -h, --help                 Show this help message\n";
   printf "    --version                  Show version information\n";
   printf "\n";
@@ -74,6 +82,7 @@ let print_help () =
   printf "    camellia compile -o output.json -f json circuit.camellia\n";
   printf "    camellia debug -d trace -v circuit.camellia\n";
   printf "    camellia stats -a circuit.camellia\n";
+  printf "    camellia analyze --analysis-depth deep circuit.camellia\n";
   printf "    camellia verify output.json\n";
   printf "\n";
   printf "OUTPUT FORMATS:\n";
@@ -103,6 +112,7 @@ let parse_command = function
   | "verify" -> Verify
   | "debug" -> Debug
   | "stats" -> Stats
+  | "analyze" -> Analyze
   | "help" -> Help
   | "version" -> Version
   | cmd -> 
@@ -205,9 +215,12 @@ let compile_circuit_file options =
     printf "  Public Inputs: %d\n" stats.num_inputs;
     printf "  Private Inputs: %d\n" stats.num_private;
     
-    let analysis = analyze_circuit compiled.r1cs_system in
-    printf "  Constraint Density: %.2f%%\n" (analysis.statistics.constraint_density *. 100.0);
-    printf "  Proving Time Est: %.3f seconds\n" analysis.statistics.proving_time_estimate;
+    (match Analysis.analyze_circuit circuit compiled.r1cs_system with
+     | Ok analysis -> 
+         printf "  Constraint Density: %.2f%%\n" (analysis.complexity.linear_constraints |> float_of_int |> fun x -> x /. float_of_int analysis.complexity.total_constraints *. 100.0);
+         printf "  Proving Time Est: %.3f seconds\n" (analysis.performance.proving_time_ms /. 1000.0);
+     | Error _ -> 
+         printf "  Analysis: Failed to analyze circuit\n");
   );
   
   if options.export_all then (
@@ -291,6 +304,62 @@ let show_circuit_stats options =
   let options_with_stats = { options with output_format = "stats"; show_stats = true } in
   compile_circuit_file options_with_stats
 
+let analyze_circuit_comprehensive options =
+  let input_file = match options.input_file with
+    | Some file -> file
+    | None ->
+        eprintf "Error: No input file specified\n";
+        eprintf "Usage: camellia analyze <FILE>\n";
+        exit 1
+  in
+  
+  if not options.quiet then
+    printf "🔍 Comprehensive Circuit Analysis: %s\n" input_file;
+  
+  (* parse the circuit *)
+  let* circuit = parse_circuit_from_file input_file in
+  
+  (* compile to get R1CS *)
+  let debug_ctx = create_context ~level:options.debug_level ~verbose:options.verbose circuit.name in
+  let* compiled = compile_circuit debug_ctx circuit in
+  
+  (* create analysis configuration based on depth *)
+  let analysis_config = match options.analysis_depth with
+    | `Quick -> { Analysis.default_config with enable_deep_analysis = false }
+    | `Full -> Analysis.default_config
+    | `Deep -> { Analysis.default_config with enable_deep_analysis = true; performance_target_ms = 500.0 }
+  in
+  
+  (* perform comprehensive analysis *)
+  let* analysis = Analysis.analyze_with_config analysis_config circuit compiled.r1cs_system in
+  
+  (* generate and display report *)
+  let report = Analysis.generate_report analysis in
+  printf "%s\n" report;
+  
+  (* export detailed analysis if requested *)
+  if options.export_analysis then (
+    let base_name = match options.input_file with
+      | Some file -> Filename.remove_extension file
+      | None -> "analysis"
+    in
+    let analysis_filename = base_name ^ "_analysis.txt" in
+    let json_filename = base_name ^ "_analysis.json" in
+    
+    let* () = Analysis.export_report analysis analysis_filename in
+    let json_content = Analysis.export_json analysis |> Yojson.Safe.pretty_to_string in
+    let* () = write_file json_filename json_content in
+    
+    if not options.quiet then (
+      printf "\n📁 Detailed analysis exported:\n";
+      printf "  Report: %s\n" analysis_filename;
+      printf "  JSON: %s\n" json_filename;
+    );
+    Ok ()
+  ) |> ignore;
+  
+  Ok ()
+
 let parse_args args =
   let rec parse_args_rec options = function
     | [] -> options
@@ -311,6 +380,19 @@ let parse_args args =
     | "-d" :: level :: rest | "--debug" :: level :: rest ->
         let debug_level = parse_debug_level level in
         parse_args_rec { options with debug_level } rest
+    | "--analysis-depth" :: depth :: rest ->
+        let analysis_depth = match depth with
+          | "quick" -> `Quick
+          | "full" -> `Full  
+          | "deep" -> `Deep
+          | _ -> 
+              eprintf "Invalid analysis depth: %s\n" depth;
+              eprintf "Valid depths: quick, full, deep\n";
+              exit 1
+        in
+        parse_args_rec { options with analysis_depth } rest
+    | "--export-analysis" :: rest ->
+        parse_args_rec { options with export_analysis = true } rest
     | cmd :: rest when String.get cmd 0 <> '-' && options.command = Help ->
         let command = parse_command cmd in
         let options = { options with command } in
@@ -342,6 +424,7 @@ let main () =
     | Verify -> verify_r1cs_file options
     | Debug -> debug_compilation options
     | Stats -> show_circuit_stats options
+    | Analyze -> analyze_circuit_comprehensive options
   in
   
   handle_error result

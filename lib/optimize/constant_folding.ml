@@ -1,4 +1,4 @@
-open Error
+(* constant folding optimization pass *)
 open Debug
 open Pass_interface
 
@@ -45,7 +45,7 @@ let rec fold_expression ctx expr =
            Ast.Const const_val
        | None -> expr)
   
-  | Ast.Const value -> expr (* alr a constant *)
+  | Ast.Const _value -> expr (* alr a constant *)
   
   | Ast.Add (e1, e2) ->
       let folded_e1 = fold_expression ctx e1 in

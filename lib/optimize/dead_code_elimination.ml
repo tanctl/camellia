@@ -1,4 +1,4 @@
-open Error
+(* dead code elimination optimization pass *)
 open Debug
 open Pass_interface
 
@@ -154,10 +154,10 @@ let perform_iterative_elimination circuit ctx =
   
   eliminate_until_stable circuit 1
 
-let apply_dead_code_elimination pass_ctx circuit =
-  let ctx = create_usage_context pass_ctx.debug_ctx in
+let apply_dead_code_elimination_impl pass_ctx circuit =
+  let ctx = create_usage_context pass_ctx.Pass_interface.debug_ctx in
   
-  log pass_ctx.debug_ctx Info "Starting dead code elimination pass";
+  log pass_ctx.Pass_interface.debug_ctx Info "Starting dead code elimination pass";
   
   let original_stmt_count = List.length circuit.Ast.body in
   
@@ -166,7 +166,7 @@ let apply_dead_code_elimination pass_ctx circuit =
   let final_stmt_count = List.length optimized_circuit.body in
   let eliminated_count = !(ctx.eliminated_count) in
   
-  log pass_ctx.debug_ctx Info "Dead code elimination completed: %d statements eliminated (%d -> %d)" 
+  log pass_ctx.Pass_interface.debug_ctx Info "Dead code elimination completed: %d statements eliminated (%d -> %d)" 
     eliminated_count original_stmt_count final_stmt_count;
   
   let statistics = {
@@ -196,4 +196,4 @@ let create_pass () =
     pass_name 
     pass_description
     enabled_at_level
-    apply_dead_code_elimination
+    apply_dead_code_elimination_impl
