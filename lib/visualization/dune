@@ -1,0 +1,11 @@
+(library
+ (public_name camellia.visualization)
+ (name visualization)
+ (libraries 
+   camellia.ast
+   camellia.error
+   camellia.debug
+   camellia.r1cs
+   camellia.analysis
+   unix
+   str))

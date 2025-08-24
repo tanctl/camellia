@@ -76,6 +76,7 @@ let rec compile_expr ctx expr =
   | Ast.Var var_name -> compile_var ctx var_name
   | Ast.Const value -> compile_const ctx value
   | Ast.Add (e1, e2) -> compile_add ctx e1 e2
+  | Ast.Sub (e1, e2) -> compile_sub ctx e1 e2
   | Ast.Mul (e1, e2) -> compile_mul ctx e1 e2
   | Ast.Equal (e1, e2) -> compile_equal ctx e1 e2
   | Ast.Poseidon exprs -> compile_poseidon ctx exprs
@@ -118,7 +119,7 @@ and compile_add ctx e1 e2 =
   let* (result1, ctx1) = compile_expr ctx e1 in
   let* (result2, ctx2) = compile_expr ctx1 e2 in
   
-  let wire_name = Printf.sprintf "add_%d_%d" result1.wire_id result2.wire_id in
+  let wire_name = Printf.sprintf "add_%d_%d_%d" result1.wire_id result2.wire_id ctx2.wire_manager.next_id in
   let* (sum_wire, ctx3) = allocate_wire ctx2 wire_name R1cs.Intermediate () in
   
   let addition_constraint = R1cs.create_addition_constraint result1.wire_id result2.wire_id sum_wire in
@@ -130,11 +131,27 @@ and compile_add ctx e1 e2 =
   
   Ok ({ wire_id = sum_wire; constraints = all_constraints }, final_ctx)
 
+and compile_sub ctx e1 e2 =
+  let* (result1, ctx1) = compile_expr ctx e1 in
+  let* (result2, ctx2) = compile_expr ctx1 e2 in
+  
+  let wire_name = Printf.sprintf "sub_%d_%d_%d" result1.wire_id result2.wire_id ctx2.wire_manager.next_id in
+  let* (diff_wire, ctx3) = allocate_wire ctx2 wire_name R1cs.Intermediate () in
+  
+  let* subtraction_constraint = R1cs.create_subtraction_constraint result1.wire_id result2.wire_id diff_wire in
+  let final_ctx = add_constraint_to_context ctx3 subtraction_constraint in
+  
+  let all_constraints = result1.constraints @ result2.constraints @ [subtraction_constraint] in
+  log ctx.debug_ctx Trace "Generated subtraction: wire%d - wire%d = wire%d" 
+    result1.wire_id result2.wire_id diff_wire;
+  
+  Ok ({ wire_id = diff_wire; constraints = all_constraints }, final_ctx)
+
 and compile_mul ctx e1 e2 =
   let* (result1, ctx1) = compile_expr ctx e1 in
   let* (result2, ctx2) = compile_expr ctx1 e2 in
   
-  let wire_name = Printf.sprintf "mul_%d_%d" result1.wire_id result2.wire_id in
+  let wire_name = Printf.sprintf "mul_%d_%d_%d" result1.wire_id result2.wire_id ctx2.wire_manager.next_id in
   let* (product_wire, ctx3) = allocate_wire ctx2 wire_name R1cs.Intermediate () in
   
   let mul_constraint = R1cs.create_multiplication_constraint result1.wire_id result2.wire_id product_wire in
@@ -212,7 +229,8 @@ let compile_stmt ctx stmt =
   | Ast.Constraint expr ->
       let* (result, ctx1) = compile_expr ctx expr in
       let one_field = Field.one in
-      let* (one_wire, ctx2) = allocate_wire ctx1 "constraint_one" R1cs.Constant () in
+      let constraint_wire_name = Printf.sprintf "constraint_one_%d" ctx1.wire_manager.next_id in
+      let* (one_wire, ctx2) = allocate_wire ctx1 constraint_wire_name R1cs.Constant () in
       let one_constraint = R1cs.create_constant_constraint one_wire one_field in
       
       let assertion_constraint = 

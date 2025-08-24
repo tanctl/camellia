@@ -2,6 +2,7 @@ type expr =
   | Var of string
   | Const of string
   | Add of expr * expr
+  | Sub of expr * expr
   | Mul of expr * expr
   | Equal of expr * expr
   | Poseidon of expr list
@@ -21,6 +22,7 @@ let rec pp_expr fmt = function
   | Var s -> Format.fprintf fmt "%s" s
   | Const s -> Format.fprintf fmt "%s" s
   | Add (e1, e2) -> Format.fprintf fmt "(%a + %a)" pp_expr e1 pp_expr e2
+  | Sub (e1, e2) -> Format.fprintf fmt "(%a - %a)" pp_expr e1 pp_expr e2
   | Mul (e1, e2) -> Format.fprintf fmt "(%a * %a)" pp_expr e1 pp_expr e2
   | Equal (e1, e2) -> Format.fprintf fmt "(%a == %a)" pp_expr e1 pp_expr e2
   | Poseidon exprs -> 
@@ -58,7 +60,7 @@ let circuit_to_string circuit =
 let rec get_vars = function
   | Var s -> [s]
   | Const _ -> []
-  | Add (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
+  | Add (e1, e2) | Sub (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
       (get_vars e1) @ (get_vars e2)
   | Poseidon exprs -> 
       List.fold_left (fun acc e -> acc @ (get_vars e)) [] exprs
@@ -66,14 +68,14 @@ let rec get_vars = function
 let rec get_constants = function
   | Var _ -> []
   | Const s -> [s]
-  | Add (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
+  | Add (e1, e2) | Sub (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
       (get_constants e1) @ (get_constants e2)
   | Poseidon exprs -> 
       List.fold_left (fun acc e -> acc @ (get_constants e)) [] exprs
 
 let rec expr_depth = function
   | Var _ | Const _ -> 1
-  | Add (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
+  | Add (e1, e2) | Sub (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
       1 + max (expr_depth e1) (expr_depth e2)
   | Poseidon exprs -> 
       1 + (List.fold_left (fun acc e -> max acc (expr_depth e)) 0 exprs)
@@ -81,7 +83,7 @@ let rec expr_depth = function
 let rec contains_var var = function
   | Var s -> s = var
   | Const _ -> false
-  | Add (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
+  | Add (e1, e2) | Sub (e1, e2) | Mul (e1, e2) | Equal (e1, e2) -> 
       (contains_var var e1) || (contains_var var e2)
   | Poseidon exprs -> 
       List.exists (contains_var var) exprs

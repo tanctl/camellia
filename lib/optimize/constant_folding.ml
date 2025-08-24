@@ -60,6 +60,19 @@ let rec fold_expression ctx expr =
             | None -> Ast.Add (folded_e1, folded_e2))
        | _ -> Ast.Add (folded_e1, folded_e2))
   
+  | Ast.Sub (e1, e2) ->
+      let folded_e1 = fold_expression ctx e1 in
+      let folded_e2 = fold_expression ctx e2 in
+      (match (folded_e1, folded_e2) with
+       | (Ast.Const v1, Ast.Const v2) when is_constant_value v1 && is_constant_value v2 ->
+           (match evaluate_constant_operation "sub" v1 v2 with
+            | Some result ->
+                log ctx.debug_ctx Trace "Folding subtraction: %s - %s = %s" v1 v2 result;
+                incr ctx.folded_count;
+                Ast.Const result
+            | None -> Ast.Sub (folded_e1, folded_e2))
+       | _ -> Ast.Sub (folded_e1, folded_e2))
+  
   | Ast.Mul (e1, e2) ->
       let folded_e1 = fold_expression ctx e1 in
       let folded_e2 = fold_expression ctx e2 in

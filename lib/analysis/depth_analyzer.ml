@@ -24,6 +24,11 @@ let rec calculate_ast_expr_depth (expr: Ast.expr) : expr_depth =
       let d2 = calculate_ast_expr_depth e2 in
       let max_d = max_depth d1 d2 in
       { max_d with additive_depth = max_d.additive_depth + 1 }
+  | Ast.Sub (e1, e2) ->
+      let d1 = calculate_ast_expr_depth e1 in
+      let d2 = calculate_ast_expr_depth e2 in
+      let max_d = max_depth d1 d2 in
+      { max_d with additive_depth = max_d.additive_depth + 1 }
   | Ast.Mul (e1, e2) ->
       let d1 = calculate_ast_expr_depth e1 in
       let d2 = calculate_ast_expr_depth e2 in

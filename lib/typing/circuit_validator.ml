@@ -96,7 +96,7 @@ let rec validate_expr_constraints expr pos =
   let open Error in
   match expr with
   | Var _ | Const _ -> Ok pos
-  | Add (e1, e2) | Mul (e1, e2) | Equal (e1, e2) ->
+  | Add (e1, e2) | Sub (e1, e2) | Mul (e1, e2) | Equal (e1, e2) ->
       let* _ = validate_expr_constraints e1 pos in
       let* _ = validate_expr_constraints e2 pos in
       Ok pos
@@ -135,7 +135,7 @@ let validate_circuit_semantics circuit pos =
 let validate_field_operations circuit pos =
   let rec validate_field_expr = function
     | Var _ | Const _ -> Ok pos
-    | Add (e1, e2) | Mul (e1, e2) -> 
+    | Add (e1, e2) | Sub (e1, e2) | Mul (e1, e2) -> 
         let* _ = validate_field_expr e1 in
         let* _ = validate_field_expr e2 in
         Ok pos

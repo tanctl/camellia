@@ -388,7 +388,7 @@ let generate_validation_report (r1cs : R1cs.r1cs_system) witness circuit_name =
   let* validation = check_witness_satisfiability r1cs witness in
   let analysis = analyze_circuit r1cs in
   
-  let status_icon = if validation.is_valid then "✅" else "❌" in
+  let status_icon = if validation.is_valid then "VALID" else "INVALID" in
   let status_text = if validation.is_valid then "SATISFIED" else "UNSATISFIED" in
   
   let lines = [
@@ -415,7 +415,7 @@ let generate_validation_report (r1cs : R1cs.r1cs_system) witness circuit_name =
     "";
     "CONSTRAINT VALIDATION DETAILS:";
   ] @ (take_n validation.constraint_results 10 |> List.map (fun (id, satisfied, details) ->
-    let icon = if satisfied then "✅" else "❌" in
+    let icon = if satisfied then "OK" else "FAIL" in
     Printf.sprintf "  C%-3d %s %s" id icon details
   )) in
   

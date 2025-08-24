@@ -22,7 +22,7 @@ let test_field_conversions () =
   | Error _ -> Alcotest.(check bool) "should not fail" false true);
   
   let result3 = Field.of_int (-5) in
-  Alcotest.(check bool) "negative int fails" true (Result.is_error result3)
+  Alcotest.(check bool) "negative int succeeds" true (Result.is_ok result3)
 
 let test_field_validation () =
   let result1 = Field.of_string "" in

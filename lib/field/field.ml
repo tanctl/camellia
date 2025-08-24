@@ -10,6 +10,14 @@ let one = "1"
 let validate_field_string s =
   if String.length s = 0 then
     Error (invalid_field_element s ~context:"empty string" ())
+  else if s.[0] = '-' && String.length s > 1 then
+    (* handle negative numbers by converting to field representation *)
+    let abs_part = String.sub s 1 (String.length s - 1) in
+    if String.for_all (function '0'..'9' -> true | _ -> false) abs_part then
+      (* convert negative to field equivalent: p - |n| *)
+      Ok (Printf.sprintf "(%s - %s mod %s)" bn254_modulus abs_part bn254_modulus)
+    else
+      Error (invalid_field_element s ~context:"non-numeric characters after minus" ())
   else if String.for_all (function '0'..'9' -> true | _ -> false) s then
     if String.length s > String.length bn254_modulus then
       Error (invalid_field_element s ~context:"exceeds field modulus" ())
@@ -22,7 +30,8 @@ let of_string s = validate_field_string s
 
 let of_int i = 
   if i < 0 then
-    Error (invalid_field_element (string_of_int i) ~context:"negative integer" ())
+    (* convert negative to field representation *)
+    Ok (Printf.sprintf "(%s - %d mod %s)" bn254_modulus (abs i) bn254_modulus)
   else
     Ok (string_of_int i)
 

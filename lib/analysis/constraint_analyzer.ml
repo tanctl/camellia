@@ -35,6 +35,7 @@ let analyze_ast_constraint_patterns (circuit: Ast.circuit) : (constraint_categor
   
   let analyze_expr = function
     | Ast.Add (_, _) -> count_category Linear
+    | Ast.Sub (_, _) -> count_category Linear
     | Ast.Mul (_, _) -> count_category Quadratic
     | Ast.Equal (_, _) -> count_category Comparison
     | Ast.Poseidon _ -> count_category Hash

@@ -30,7 +30,7 @@ let exit_scope scope =
 let rec collect_expr_vars = function
   | Var name -> [name]
   | Const _ -> []
-  | Add (e1, e2) | Mul (e1, e2) | Equal (e1, e2) ->
+  | Add (e1, e2) | Sub (e1, e2) | Mul (e1, e2) | Equal (e1, e2) ->
       (collect_expr_vars e1) @ (collect_expr_vars e2)
   | Poseidon exprs ->
       List.fold_left (fun acc e -> acc @ (collect_expr_vars e)) [] exprs

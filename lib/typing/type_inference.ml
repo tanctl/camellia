@@ -29,6 +29,16 @@ let rec type_expr env expr pos =
                    (Printf.sprintf "%s + %s" (type_to_string t1) (type_to_string t2)) 
                    pos))
   
+  | Sub (e1, e2) ->
+      let* typed_e1 = type_expr env e1 pos in
+      let* typed_e2 = type_expr env e2 pos in
+      (match typed_e1.type_, typed_e2.type_ with
+       | FieldType, FieldType -> Ok { expr; type_ = FieldType; pos }
+       | t1, t2 -> 
+           Error (Types.type_mismatch_error "Field - Field" 
+                   (Printf.sprintf "%s - %s" (type_to_string t1) (type_to_string t2)) 
+                   pos))
+  
   | Mul (e1, e2) ->
       let* typed_e1 = type_expr env e1 pos in
       let* typed_e2 = type_expr env e2 pos in

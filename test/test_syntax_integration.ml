@@ -89,13 +89,13 @@ let test_syntax_errors () =
 
 let test_comment_handling () =
   let input = {|
-// This is a line comment
+(* This is a comment *)
 circuit CommentTest {
-  # This is also a comment
-  inputs: x  // inline comment
+  (* This is also a comment *)
+  inputs: x  (* inline comment *)
   
-  // Another comment
-  result = x + 1  # mixed comment styles
+  (* Another comment *)
+  result = x + 1  (* OCaml style comment *)
   assert result == 6
 }
 |} in

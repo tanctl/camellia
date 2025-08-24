@@ -4,6 +4,7 @@ open Ast
 open Compiler
 open Output
 open Debug
+open Visualization
 
 let version = "1.0.0-MVP"
 
@@ -13,6 +14,9 @@ type command =
   | Debug
   | Stats
   | Analyze
+  | Visualize
+  | Inspect
+  | Interactive
   | Help
   | Version
 
@@ -28,6 +32,13 @@ type cli_options = {
   export_all: bool;
   analysis_depth: [`Quick | `Full | `Deep];
   export_analysis: bool;
+  (* visualization options *)
+  viz_type: [`Circuit | `R1CS | `Both];
+  viz_format: [`DOT | `SVG | `PNG];
+  viz_layout: [`Hierarchical | `Force | `Circular];
+  show_constraints: bool;
+  interactive_mode: bool;
+  constraint_index: int option;
 }
 
 let default_options = {
@@ -42,6 +53,13 @@ let default_options = {
   export_all = false;
   analysis_depth = `Full;
   export_analysis = false;
+  (* visualization options *)
+  viz_type = `Circuit;
+  viz_format = `SVG;
+  viz_layout = `Hierarchical;
+  show_constraints = false;
+  interactive_mode = false;
+  constraint_index = None;
 }
 
 let print_version () =
@@ -61,6 +79,9 @@ let print_help () =
   printf "    debug      Show detailed compilation process\n";
   printf "    stats      Display circuit statistics and analysis\n";
   printf "    analyze    Comprehensive circuit analysis with security and performance metrics\n";
+  printf "    visualize  Generate circuit and R1CS visualizations\n";
+  printf "    inspect    Inspect constraints and circuit structure\n";
+  printf "    interactive Start interactive debugging session\n";
   printf "    help       Show this help message\n";
   printf "    version    Show version information\n";
   printf "\n";
@@ -74,6 +95,12 @@ let print_help () =
   printf "    -a, --all                  Export all formats\n";
   printf "    --analysis-depth <LEVEL>   Analysis depth [quick|full|deep]\n";
   printf "    --export-analysis          Export detailed analysis report\n";
+  printf "    --viz-type <TYPE>          Visualization type [circuit|r1cs|both]\n";
+  printf "    --viz-format <FORMAT>      Visualization format [dot|svg|png]\n";
+  printf "    --viz-layout <LAYOUT>      Layout algorithm [hierarchical|force|circular]\n";
+  printf "    --show-constraints         Show constraints in visualization\n";
+  printf "    --interactive              Start interactive debugging mode\n";
+  printf "    --constraint <INDEX>       Inspect specific constraint\n";
   printf "    -h, --help                 Show this help message\n";
   printf "    --version                  Show version information\n";
   printf "\n";
@@ -84,6 +111,9 @@ let print_help () =
   printf "    camellia stats -a circuit.camellia\n";
   printf "    camellia analyze --analysis-depth deep circuit.camellia\n";
   printf "    camellia verify output.json\n";
+  printf "    camellia visualize --viz-type circuit --viz-format svg circuit.camellia\n";
+  printf "    camellia inspect --constraint 5 circuit.camellia\n";
+  printf "    camellia interactive --show-constraints circuit.camellia\n";
   printf "\n";
   printf "OUTPUT FORMATS:\n";
   printf "    json       Enhanced JSON with metadata and analysis\n";
@@ -113,6 +143,9 @@ let parse_command = function
   | "debug" -> Debug
   | "stats" -> Stats
   | "analyze" -> Analyze
+  | "visualize" -> Visualize
+  | "inspect" -> Inspect
+  | "interactive" -> Interactive
   | "help" -> Help
   | "version" -> Version
   | cmd -> 
@@ -160,7 +193,7 @@ let compile_circuit_file options =
   in
   
   if not options.quiet then
-    printf "🔧 Compiling circuit: %s\n" input_file;
+    printf "Compiling circuit: %s\n" input_file;
   
   let* circuit = parse_circuit_from_file input_file in
   
@@ -200,7 +233,7 @@ let compile_circuit_file options =
    | Some filename ->
        let* () = write_file filename output_content in
        if not options.quiet then
-         printf "✅ Compilation successful! Output written to: %s\n" filename;
+         printf "SUCCESS: Compilation successful! Output written to: %s\n" filename;
        Ok ()
    | None ->
        printf "%s\n" output_content;
@@ -209,7 +242,7 @@ let compile_circuit_file options =
   
   if options.show_stats then (
     let stats = get_compilation_stats compiled in
-    printf "\n📊 CIRCUIT STATISTICS:\n";
+    printf "\nCIRCUIT STATISTICS:\n";
     printf "  Variables: %d\n" stats.num_variables;
     printf "  Constraints: %d\n" stats.num_constraints;
     printf "  Public Inputs: %d\n" stats.num_inputs;
@@ -245,7 +278,7 @@ let verify_r1cs_file options =
   in
   
   if not options.quiet then
-    printf "🔍 Verifying R1CS file: %s\n" input_file;
+    printf "Verifying R1CS file: %s\n" input_file;
   
   let* content = read_file input_file in
   let json = try Yojson.Safe.from_string content
@@ -263,43 +296,43 @@ let verify_r1cs_file options =
               | Some (`String name) -> name
               | _ -> "unknown_circuit" in
             
-            printf "✅ R1CS Format: Valid JSON structure\n";
-            printf "📋 Circuit Name: %s\n" circuit_name;
-            printf "🔗 Constraints: %d found\n" (List.length constraint_list);
+            printf "SUCCESS: R1CS Format: Valid JSON structure\n";
+            printf "Circuit Name: %s\n" circuit_name;
+            printf "Constraints: %d found\n" (List.length constraint_list);
             
             (match List.assoc_opt "analysis" fields with
              | Some (`Assoc analysis_fields) ->
                  (match List.assoc_opt "constraint_density" analysis_fields with
                   | Some (`Float density) ->
-                      printf "📊 Constraint Density: %.2f%%\n" (density *. 100.0)
+                      printf "Constraint Density: %.2f%%\n" (density *. 100.0)
                   | _ -> ());
                  (match List.assoc_opt "proving_time_estimate_sec" analysis_fields with
                   | Some (`Float time) ->
-                      printf "⏱️  Proving Time Est: %.3f seconds\n" time
+                      printf "Proving Time Est: %.3f seconds\n" time
                   | _ -> ())
              | _ -> ());
             
-            printf "✅ R1CS verification complete - structure is valid\n";
+            printf "SUCCESS: R1CS verification complete - structure is valid\n";
             Ok ()
         | _ ->
-            printf "❌ Invalid R1CS format: missing required fields\n";
+            printf "ERROR: Invalid R1CS format: missing required fields\n";
             Result.Error (circuit_error "Invalid R1CS JSON format" ())
        )
    | _ ->
-       printf "❌ Invalid JSON: expected object at root level\n";
+       printf "ERROR: Invalid JSON: expected object at root level\n";
        Result.Error (circuit_error "Invalid JSON format" ())
   )
 
 let debug_compilation options =
   if not options.quiet then
-    printf "🐛 Debug mode: Detailed compilation trace\n";
+    printf "Debug mode: Detailed compilation trace\n";
   
   let options_with_debug = { options with debug_level = Trace; verbose = true; show_stats = true } in
   compile_circuit_file options_with_debug
 
 let show_circuit_stats options =
   if not options.quiet then
-    printf "📊 Circuit Statistics and Analysis\n";
+    printf "Circuit Statistics and Analysis\n";
   
   let options_with_stats = { options with output_format = "stats"; show_stats = true } in
   compile_circuit_file options_with_stats
@@ -314,7 +347,7 @@ let analyze_circuit_comprehensive options =
   in
   
   if not options.quiet then
-    printf "🔍 Comprehensive Circuit Analysis: %s\n" input_file;
+    printf "Comprehensive Circuit Analysis: %s\n" input_file;
   
   (* parse the circuit *)
   let* circuit = parse_circuit_from_file input_file in
@@ -360,6 +393,125 @@ let analyze_circuit_comprehensive options =
   
   Ok ()
 
+let visualize_circuit_file options =
+  let input_file = match options.input_file with
+    | Some file -> file
+    | None ->
+        eprintf "Error: No input file specified\n";
+        eprintf "Usage: camellia visualize <FILE>\n";
+        exit 1
+  in
+  
+  if not options.quiet then
+    printf "Generating circuit visualization: %s\n" input_file;
+  
+  let* circuit = parse_circuit_from_file input_file in
+  let debug_ctx = create_context ~level:options.debug_level ~verbose:options.verbose circuit.name in
+  
+  let base_name = match options.output_file with
+    | Some file -> Filename.remove_extension file
+    | None -> Filename.remove_extension input_file
+  in
+  
+  let viz_config = {
+    default_config with
+    format = (match options.viz_format with
+      | `DOT -> Types.GraphViz_DOT
+      | `SVG -> Types.SVG  
+      | `PNG -> Types.PNG);
+    layout = (match options.viz_layout with
+      | `Hierarchical -> Types.Hierarchical
+      | `Force -> Types.ForceDirected
+      | `Circular -> Types.Circular);
+    show_constraints = options.show_constraints;
+  } in
+  
+  (match options.viz_type with
+   | `Circuit ->
+       let graph = create_circuit_visualization ~config:viz_config circuit in
+       let filename = base_name ^ "_circuit." ^ (match options.viz_format with `DOT -> "dot" | `SVG -> "svg" | `PNG -> "png") in
+       let* () = export_visualization viz_config graph filename in
+       if not options.quiet then printf "SUCCESS: Circuit visualization saved to: %s\n" filename;
+       Ok ()
+       
+   | `R1CS ->
+       let* compiled = compile_circuit debug_ctx circuit in
+       let graph = create_r1cs_visualization ~config:viz_config compiled.r1cs_system in
+       let filename = base_name ^ "_r1cs." ^ (match options.viz_format with `DOT -> "dot" | `SVG -> "svg" | `PNG -> "png") in
+       let* () = export_visualization viz_config graph filename in
+       if not options.quiet then printf "SUCCESS: R1CS visualization saved to: %s\n" filename;
+       Ok ()
+       
+   | `Both ->
+       let* compiled = compile_circuit debug_ctx circuit in
+       let* () = detailed_visualize circuit compiled.r1cs_system base_name in
+       Ok ())
+
+let inspect_circuit_file options =
+  let input_file = match options.input_file with
+    | Some file -> file
+    | None ->
+        eprintf "Error: No input file specified\n";
+        eprintf "Usage: camellia inspect <FILE>\n";
+        exit 1
+  in
+  
+  if not options.quiet then
+    printf "Inspecting circuit constraints: %s\n" input_file;
+  
+  let* circuit = parse_circuit_from_file input_file in
+  let debug_ctx = create_context ~level:options.debug_level ~verbose:options.verbose circuit.name in
+  let* compiled = compile_circuit debug_ctx circuit in
+  
+  (match options.constraint_index with
+   | Some idx ->
+       (match inspect_single_constraint compiled.r1cs_system idx with
+        | Ok constraint_view ->
+            printf "Constraint %d:\n" constraint_view.constraint_id;
+            printf "  Type: %s\n" constraint_view.constraint_type;
+            printf "  Variables: [%s]\n" (String.concat ", " constraint_view.variables);
+            printf "  Equation: %s\n" constraint_view.description;
+            Ok ()
+        | Error err ->
+            eprintf "ERROR: Error inspecting constraint: %s\n" (error_to_string err);
+            Error err)
+   | None ->
+       let inspection = inspect_constraints compiled.r1cs_system in
+       printf "Circuit Constraint Summary:\n";
+       printf "  Total Variables: %d\n" inspection.total_variables;
+       printf "  Total Constraints: %d\n" inspection.total_constraints;
+       
+       let constraint_types = Hashtbl.create 16 in
+       List.iter (fun constraint_view ->
+         let current = Hashtbl.find_opt constraint_types constraint_view.Visualization.Types.constraint_type |> Option.value ~default:0 in
+         Hashtbl.replace constraint_types constraint_view.Visualization.Types.constraint_type (current + 1)
+       ) inspection.constraints;
+       
+       printf "  Constraint Types:\n";
+       Hashtbl.iter (fun ctype count ->
+         printf "    %s: %d\n" (String.capitalize_ascii ctype) count
+       ) constraint_types;
+       Ok ())
+
+let interactive_debug_file options =
+  let input_file = match options.input_file with
+    | Some file -> file
+    | None ->
+        eprintf "Error: No input file specified\n";
+        eprintf "Usage: camellia interactive <FILE>\n";
+        exit 1
+  in
+  
+  if not options.quiet then
+    printf "Starting interactive debugger: %s\n" input_file;
+  
+  let* circuit = parse_circuit_from_file input_file in
+  let debug_ctx = create_context ~level:options.debug_level ~verbose:options.verbose circuit.name in
+  let* compiled = compile_circuit debug_ctx circuit in
+  
+  let _session = start_interactive_debug circuit compiled.r1cs_system in
+  Ok ()
+
 let parse_args args =
   let rec parse_args_rec options = function
     | [] -> options
@@ -393,6 +545,50 @@ let parse_args args =
         parse_args_rec { options with analysis_depth } rest
     | "--export-analysis" :: rest ->
         parse_args_rec { options with export_analysis = true } rest
+    | "--viz-type" :: viz_type :: rest ->
+        let viz_type = match viz_type with
+          | "circuit" -> `Circuit
+          | "r1cs" -> `R1CS
+          | "both" -> `Both
+          | _ -> 
+              eprintf "Invalid visualization type: %s\n" viz_type;
+              eprintf "Valid types: circuit, r1cs, both\n";
+              exit 1
+        in
+        parse_args_rec { options with viz_type } rest
+    | "--viz-format" :: viz_format :: rest ->
+        let viz_format = match viz_format with
+          | "dot" -> `DOT
+          | "svg" -> `SVG
+          | "png" -> `PNG
+          | _ ->
+              eprintf "Invalid visualization format: %s\n" viz_format;
+              eprintf "Valid formats: dot, svg, png\n";
+              exit 1
+        in
+        parse_args_rec { options with viz_format } rest
+    | "--viz-layout" :: viz_layout :: rest ->
+        let viz_layout = match viz_layout with
+          | "hierarchical" -> `Hierarchical
+          | "force" -> `Force
+          | "circular" -> `Circular
+          | _ ->
+              eprintf "Invalid layout: %s\n" viz_layout;
+              eprintf "Valid layouts: hierarchical, force, circular\n";
+              exit 1
+        in
+        parse_args_rec { options with viz_layout } rest
+    | "--show-constraints" :: rest ->
+        parse_args_rec { options with show_constraints = true } rest
+    | "--interactive" :: rest ->
+        parse_args_rec { options with interactive_mode = true } rest
+    | "--constraint" :: idx :: rest ->
+        (try 
+          let constraint_index = int_of_string idx in
+          parse_args_rec { options with constraint_index = Some constraint_index } rest
+        with _ ->
+          eprintf "Invalid constraint index: %s\n" idx;
+          exit 1)
     | cmd :: rest when String.get cmd 0 <> '-' && options.command = Help ->
         let command = parse_command cmd in
         let options = { options with command } in
@@ -409,7 +605,7 @@ let parse_args args =
 let handle_error = function
   | Ok () -> ()
   | Error err ->
-      eprintf "❌ Error: %s\n" (error_to_string err);
+      eprintf "Error: %s\n" (error_to_string err);
       exit 1
 
 let main () =
@@ -425,6 +621,9 @@ let main () =
     | Debug -> debug_compilation options
     | Stats -> show_circuit_stats options
     | Analyze -> analyze_circuit_comprehensive options
+    | Visualize -> visualize_circuit_file options
+    | Inspect -> inspect_circuit_file options
+    | Interactive -> interactive_debug_file options
   in
   
   handle_error result

@@ -132,24 +132,24 @@ let test_whitespace_and_comments () =
   let input = {|
 
 
-# this is a circuit comment
+(* this is a circuit comment *)
 circuit   whitespace_test   {
 
 
-    # public input comment  
-    public   inputs  :  a,   b,   c   # inline comment
+    (* public input comment *)  
+    public   inputs  :  a,   b,   c   (* inline comment *)
 
 
     private inputs:d,e
 
-    # computation section
-    result=a+b*c  # no spaces
+    (* computation section *)
+    result=a+b*c  (* no spaces *)
 
-    # assertion section
-    assert   result==d+e   # spaced out
+    (* assertion section *)
+    assert   result==d+e   (* spaced out *)
 
 
-}  # end comment
+}  (* end comment *)
 
 
 |} in
@@ -190,7 +190,7 @@ let test_complex_expressions () =
       public inputs: a, b
       private inputs: c, d
       
-      # nested expressions
+      (* nested expressions *)
       nested = (a + b) * c
       chained = a + b * d
       equality = a == b

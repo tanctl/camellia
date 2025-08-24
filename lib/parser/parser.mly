@@ -135,13 +135,13 @@ expression:
   | expression PLUS expression
     { Add ($1, $3) }
   | expression MINUS expression  
-    { Add ($1, Mul (Const "-1", $3)) }
+    { Sub ($1, $3) }
   | expression MULTIPLY expression
     { Mul ($1, $3) }
   | expression DOUBLE_EQUALS expression
     { Equal ($1, $3) }
   | MINUS expression %prec UMINUS
-    { Mul (Const "-1", $2) }
+    { Sub (Const "0", $2) }
   | PLUS expression %prec UPLUS
     { $2 }
   | LPAREN expression RPAREN

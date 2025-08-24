@@ -4,16 +4,39 @@ let contains_substring s sub =
   try ignore (Str.search_forward (Str.regexp_string sub) s 0); true 
   with Not_found -> false
 
+let project_root = 
+  let rec find_root dir =
+    if Sys.file_exists (Filename.concat dir "dune-project") then
+      dir
+    else
+      let parent = Filename.dirname dir in
+      if String.equal parent dir then
+        failwith "Could not find project root"
+      else
+        find_root parent
+  in
+  find_root (Sys.getcwd ())
+
+let run_command_in_project_root cmd =
+  let original_cwd = Sys.getcwd () in
+  Sys.chdir project_root;
+  let result = Sys.command cmd in
+  Sys.chdir original_cwd;
+  result
+
+let run_cli_command cmd =
+  run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe %s > /dev/null 2>&1" project_root cmd)
+
 let test_cli_help () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- help > /dev/null 2>&1" in
+  let exit_code = run_cli_command "help" in
   check int "help command exits successfully" 0 exit_code
 
 let test_cli_version () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- version > /dev/null 2>&1" in
+  let exit_code = run_cli_command "version" in
   check int "version command exits successfully" 0 exit_code
 
 let test_compile_hash_preimage () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- compile examples/hash_preimage.camellia > /tmp/test_output.json 2>/dev/null" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe compile examples/hash_preimage.cam > /tmp/test_output.json 2>/dev/null" project_root) in
   check int "hash preimage compilation succeeds" 0 exit_code;
   
   let ic = open_in "/tmp/test_output.json" in
@@ -26,7 +49,7 @@ let test_compile_hash_preimage () =
   Sys.remove "/tmp/test_output.json"
 
 let test_compile_arithmetic () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- compile -q examples/test_arithmetic.camellia > /tmp/test_arithmetic.json 2>/dev/null" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe compile -q examples/test_arithmetic.cam > /tmp/test_arithmetic.json 2>/dev/null" project_root) in
   check int "arithmetic circuit compilation succeeds" 0 exit_code;
   
   let ic = open_in "/tmp/test_arithmetic.json" in
@@ -46,7 +69,7 @@ let test_compile_arithmetic () =
   Sys.remove "/tmp/test_arithmetic.json"
 
 let test_readable_output () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- compile -f readable examples/hash_preimage.camellia > /tmp/test_readable.txt 2>/dev/null" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe compile -f readable examples/hash_preimage.cam > /tmp/test_readable.txt 2>/dev/null" project_root) in
   check int "readable output succeeds" 0 exit_code;
   
   let ic = open_in "/tmp/test_readable.txt" in
@@ -60,7 +83,7 @@ let test_readable_output () =
   Sys.remove "/tmp/test_readable.txt"
 
 let test_stats_output () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- stats examples/test_arithmetic.camellia > /tmp/test_stats.txt 2>/dev/null" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe stats examples/test_arithmetic.cam > /tmp/test_stats.txt 2>/dev/null" project_root) in
   check int "stats output succeeds" 0 exit_code;
   
   let ic = open_in "/tmp/test_stats.txt" in
@@ -73,7 +96,7 @@ let test_stats_output () =
   Sys.remove "/tmp/test_stats.txt"
 
 let test_debug_output () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- debug examples/hash_preimage.camellia > /tmp/test_debug.txt 2>&1" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe debug examples/hash_preimage.cam > /tmp/test_debug.txt 2>&1" project_root) in
   check int "debug output succeeds" 0 exit_code;
   
   let ic = open_in "/tmp/test_debug.txt" in
@@ -87,10 +110,10 @@ let test_debug_output () =
   Sys.remove "/tmp/test_debug.txt"
 
 let test_verify_command () =
-  let exit_code1 = Sys.command "dune exec bin/camellia.exe -- compile -o /tmp/verify_test.json examples/hash_preimage.camellia 2>/dev/null" in
+  let exit_code1 = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe compile -o /tmp/verify_test.json examples/hash_preimage.cam 2>/dev/null" project_root) in
   check int "create json for verification" 0 exit_code1;
   
-  let exit_code2 = Sys.command "dune exec bin/camellia.exe -- verify /tmp/verify_test.json > /tmp/verify_output.txt 2>/dev/null" in
+  let exit_code2 = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe verify /tmp/verify_test.json > /tmp/verify_output.txt 2>/dev/null" project_root) in
   check int "verification succeeds" 0 exit_code2;
   
   let ic = open_in "/tmp/verify_output.txt" in
@@ -103,7 +126,7 @@ let test_verify_command () =
   Sys.remove "/tmp/verify_output.txt"
 
 let test_output_file_option () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- compile -o /tmp/custom_output.json examples/hash_preimage.camellia 2>/dev/null" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe compile -o /tmp/custom_output.json examples/hash_preimage.cam 2>/dev/null" project_root) in
   check int "custom output file succeeds" 0 exit_code;
   
   check bool "output file created" true (Sys.file_exists "/tmp/custom_output.json");
@@ -117,7 +140,7 @@ let test_output_file_option () =
   Sys.remove "/tmp/custom_output.json"
 
 let test_verbose_flag () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- compile -v examples/hash_preimage.camellia > /tmp/verbose_output.txt 2>&1" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe compile -v examples/hash_preimage.cam > /tmp/verbose_output.txt 2>&1" project_root) in
   check int "verbose compilation succeeds" 0 exit_code;
   
   let ic = open_in "/tmp/verbose_output.txt" in
@@ -129,17 +152,17 @@ let test_verbose_flag () =
   Sys.remove "/tmp/verbose_output.txt"
 
 let test_error_handling () =
-  let exit_code = Sys.command "dune exec bin/camellia.exe -- compile nonexistent.camellia > /dev/null 2>&1" in
+  let exit_code = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe compile nonexistent.cam > /dev/null 2>&1" project_root) in
   check bool "non-existent file fails" true (exit_code <> 0);
   
-  let exit_code2 = Sys.command "dune exec bin/camellia.exe -- invalid_command > /dev/null 2>&1" in
+  let exit_code2 = run_command_in_project_root (Printf.sprintf "%s/_build/default/bin/camellia.exe invalid_command > /dev/null 2>&1" project_root) in
   check bool "invalid command fails" true (exit_code2 <> 0)
 
 let test_all_formats () =
   let formats = ["json"; "readable"; "stats"] in
   List.iter (fun format ->
-    let cmd = Printf.sprintf "dune exec bin/camellia.exe -- compile -f %s examples/hash_preimage.camellia > /tmp/test_%s_format.out 2>/dev/null" format format in
-    let exit_code = Sys.command cmd in
+    let cmd = Printf.sprintf "%s/_build/default/bin/camellia.exe compile -f %s examples/hash_preimage.cam > /tmp/test_%s_format.out 2>/dev/null" project_root format format in
+    let exit_code = run_command_in_project_root cmd in
     check int (Printf.sprintf "%s format succeeds" format) 0 exit_code;
     
     let filename = Printf.sprintf "/tmp/test_%s_format.out" format in

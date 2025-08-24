@@ -25,7 +25,7 @@ let rec collect_used_variables expr used_vars =
       if not (List.mem name !used_vars) then
         used_vars := name :: !used_vars
   | Ast.Const _ -> ()
-  | Ast.Add (e1, e2) | Ast.Mul (e1, e2) | Ast.Equal (e1, e2) ->
+  | Ast.Add (e1, e2) | Ast.Sub (e1, e2) | Ast.Mul (e1, e2) | Ast.Equal (e1, e2) ->
       collect_used_variables e1 used_vars;
       collect_used_variables e2 used_vars
   | Ast.Poseidon exprs ->

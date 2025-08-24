@@ -250,6 +250,13 @@ let create_addition_constraint a_wire b_wire sum_wire =
   let c_lc = add_term sum_wire Field.one empty_linear_combination in
   create_constraint a_lc b_lc c_lc
 
+let create_subtraction_constraint a_wire b_wire diff_wire =
+  let* neg_one = Field.neg Field.one in
+  let a_lc = add_term a_wire Field.one (add_term b_wire neg_one empty_linear_combination) in
+  let b_lc = add_term 0 Field.one empty_linear_combination in
+  let c_lc = add_term diff_wire Field.one empty_linear_combination in
+  Ok (create_constraint a_lc b_lc c_lc)
+
 let create_multiplication_constraint a_wire b_wire product_wire =
   let a_lc = add_term a_wire Field.one empty_linear_combination in
   let b_lc = add_term b_wire Field.one empty_linear_combination in

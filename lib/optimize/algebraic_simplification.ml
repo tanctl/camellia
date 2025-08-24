@@ -43,6 +43,28 @@ let rec simplify_expression ctx expr =
           result
         with _ -> expr)
     
+    (* subtraction simplifications *)
+    | Ast.Sub (e, Ast.Const "0") ->
+        log_simplification ctx expr e "x-0=x";
+        simplify_expression ctx e
+    | Ast.Sub (Ast.Const "0", e) ->
+        let negated = Ast.Mul (Ast.Const "-1", e) in
+        log_simplification ctx expr negated "0-x=-x";
+        simplify_expression ctx negated
+    | Ast.Sub (e1, e2) when Ast.expr_to_string e1 = Ast.expr_to_string e2 ->
+        let zero = Ast.Const "0" in
+        log_simplification ctx expr zero "x-x=0";
+        zero
+    | Ast.Sub (Ast.Const v1, Ast.Const v2) ->
+        (* this should be caught by constant folding, but handle it here too *)
+        (try
+          let i1 = int_of_string v1 in
+          let i2 = int_of_string v2 in
+          let result = Ast.Const (string_of_int (i1 - i2)) in
+          log_simplification ctx expr result "const-const";
+          result
+        with _ -> expr)
+    
     (* multiplication simplifications *)
     | Ast.Mul (Ast.Const "0", _) | Ast.Mul (_, Ast.Const "0") ->
         let zero = Ast.Const "0" in
@@ -91,6 +113,13 @@ let rec simplify_expression ctx expr =
           simplify_expression ctx (Ast.Add (s1, s2))
         else
           Ast.Add (s1, s2)
+    | Ast.Sub (e1, e2) ->
+        let s1 = simplify_expression ctx e1 in
+        let s2 = simplify_expression ctx e2 in
+        if s1 != e1 || s2 != e2 then
+          simplify_expression ctx (Ast.Sub (s1, s2))
+        else
+          Ast.Sub (s1, s2)
     | Ast.Mul (e1, e2) ->
         let s1 = simplify_expression ctx e1 in
         let s2 = simplify_expression ctx e2 in

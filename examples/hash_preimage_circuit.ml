@@ -263,11 +263,11 @@ let run_comprehensive_demo () =
   
   if !passed_tests = !total_tests then begin
     Printf.printf "\nALL TESTS PASSED!\n";
-    Printf.printf "✅ Hash preimage circuit implementation complete\n";
-    Printf.printf "✅ AST → R1CS compilation pipeline working\n";
-    Printf.printf "✅ Constraint generation mathematically correct\n";
-    Printf.printf "✅ Zero-knowledge properties demonstrated\n";
-    Printf.printf "✅ Complete MVP integration test successful\n\n";
+    Printf.printf "SUCCESS: Hash preimage circuit implementation complete\n";
+    Printf.printf "SUCCESS: AST → R1CS compilation pipeline working\n";
+    Printf.printf "SUCCESS: Constraint generation mathematically correct\n";
+    Printf.printf "SUCCESS: Zero-knowledge properties demonstrated\n";
+    Printf.printf "SUCCESS: Complete MVP integration test successful\n\n";
     Printf.printf "The Camellia ZK compiler is ready for:\n";
     Printf.printf "  • Complex circuit development\n";
     Printf.printf "  • Integration with ZK proof systems\n";
@@ -291,10 +291,10 @@ let demonstrate_error_handling () =
   let result = compile_hash_circuit bad_circuit "test_hash" ["test_preimage"] in
   
   match result with
-  | Ok _ -> Printf.printf "❌ Error: Should have failed\n"
+  | Ok _ -> Printf.printf "ERROR: Should have failed\n"
   | Error err ->
-      Printf.printf "✅ Correctly caught error: %s\n" (Error.error_to_string err);
-      Printf.printf "✅ Error handling system working correctly\n"
+      Printf.printf "SUCCESS: Correctly caught error: %s\n" (Error.error_to_string err);
+      Printf.printf "SUCCESS: Error handling system working correctly\n"
 
 let () =
   try

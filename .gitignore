@@ -40,8 +40,15 @@ _opam/
 *.txt
 *.circom
 *.bellman
+*.dot
+*.svg
+*.png
 examples/*.json
 examples/*.txt
+examples/*.md
+examples/*.dot
+examples/*.svg
+examples/*.png
 !examples/README.md
-!examples/*.camellia
+!examples/*.cam
 !examples/*.ml

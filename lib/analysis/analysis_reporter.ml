@@ -30,24 +30,24 @@ let generate_executive_summary (analysis: circuit_analysis) : string =
   let high_bottlenecks = List.filter (fun b -> b.severity = `High) analysis.bottlenecks in
   
   Printf.sprintf
-    "🔍 CIRCUIT ANALYSIS EXECUTIVE SUMMARY\n\
+    "[ANALYSIS] CIRCUIT ANALYSIS EXECUTIVE SUMMARY\n\
      =====================================\n\n\
      Circuit: %s\n\
      Analysis Date: %s\n\n\
-     📊 OVERALL ASSESSMENT:\n\
+     [STATS] OVERALL ASSESSMENT:\n\
      - Complexity: %s (%d constraints)\n\
      - Performance: %s (%.1fms proving time)\n\
      - Security: %s (%d issues identified)\n\
      - Critical Issues: %d\n\
      - High Priority Issues: %d\n\n\
-     🎯 KEY METRICS:\n\
+     [TARGET] KEY METRICS:\n\
      - Multiplicative Depth: %d\n\
      - Memory Usage: %.1f MB\n\
      - Proof Size: %d bytes\n\
      - Parallelizable Operations: %d\n\n\
-     ⚠️  IMMEDIATE ACTIONS REQUIRED:\n\
+     WARNING: IMMEDIATE ACTIONS REQUIRED:\n\
      %s\n\n\
-     💡 TOP RECOMMENDATIONS:\n\
+     RECOMMENDATIONS:\n\
      %s"
     analysis.circuit_name
     (let tm = Unix.localtime analysis.analysis_timestamp in
@@ -75,7 +75,7 @@ let generate_detailed_complexity_report (complexity: complexity_metrics) : strin
   in
   
   Printf.sprintf
-    "📈 DETAILED COMPLEXITY ANALYSIS\n\
+    "[ANALYSIS] DETAILED COMPLEXITY ANALYSIS\n\
      ==============================\n\n\
      CONSTRAINT BREAKDOWN:\n\
      ┌─────────────────────┬───────┬──────────┐\n\
@@ -116,7 +116,7 @@ let generate_performance_report (performance: performance_estimate) : string =
   let total_time = performance.setup_time_ms +. performance.proving_time_ms +. performance.verification_time_ms in
   
   Printf.sprintf
-    "⚡ PERFORMANCE ANALYSIS REPORT\n\
+    "[PERFORMANCE] PERFORMANCE ANALYSIS REPORT\n\
      =============================\n\n\
      TIMING BREAKDOWN:\n\
      ┌─────────────────────┬───────────┬──────────┐\n\
@@ -160,7 +160,7 @@ let generate_security_report (security: security_analysis) : string =
   let format_security_level level = security_level_to_string level in
   
   Printf.sprintf
-    "🔒 SECURITY ANALYSIS REPORT\n\
+    "[SECURITY] SECURITY ANALYSIS REPORT\n\
      ==========================\n\n\
      SECURITY ASSESSMENT:\n\
      - Field Security: %s\n\
@@ -182,10 +182,10 @@ let generate_security_report (security: security_analysis) : string =
     (format_security_level security.soundness_level)
     (format_security_level security.zero_knowledge_level)
     (if List.length security.potential_vulnerabilities = 0 then
-       "✅ No significant vulnerabilities identified"
+       "SUCCESS: No significant vulnerabilities identified"
      else
-       String.concat "\n     ⚠️  " ("     Issues found:" :: security.potential_vulnerabilities))
-    (String.concat "\n     💡 " ("     Recommendations:" :: security.recommendations))
+       String.concat "\n     WARNING: " ("     Issues found:" :: security.potential_vulnerabilities))
+    (String.concat "\n     RECOMMEND: " ("     Recommendations:" :: security.recommendations))
     (match security.field_security with VeryStrong _ | Strong _ -> "HIGH" | _ -> "MEDIUM")
     (match security.field_security with VeryStrong _ | Strong _ -> "LOW" | _ -> "ELEVATED")
     (match security.soundness_level with VeryStrong _ | Strong _ -> "HIGH" | _ -> "MEDIUM")  
@@ -198,10 +198,10 @@ let generate_bottleneck_report (bottlenecks: bottleneck list) : string =
   
   let format_bottleneck bottleneck =
     let severity_icon = match bottleneck.severity with
-      | `Critical -> "🚨"
-      | `High -> "⚠️ "
-      | `Medium -> "⚡"
-      | `Low -> "💡"
+      | `Critical -> "[CRITICAL]"
+      | `High -> "[HIGH]"
+      | `Medium -> "[MEDIUM]"
+      | `Low -> "[LOW]"
     in
     
     Printf.sprintf
@@ -224,13 +224,13 @@ let generate_bottleneck_report (bottlenecks: bottleneck list) : string =
   in
   
   if List.length bottlenecks = 0 then
-    "🎉 BOTTLENECK ANALYSIS\n\
+    "[SUCCESS] BOTTLENECK ANALYSIS\n\
      ====================\n\n\
-     ✅ No significant bottlenecks identified!\n\
+     SUCCESS: No significant bottlenecks identified!\n\
      The circuit appears to be well-optimized for its complexity level."
   else
     Printf.sprintf
-      "🔍 BOTTLENECK ANALYSIS\n\
+      "[ANALYSIS] BOTTLENECK ANALYSIS\n\
        ====================\n\n\
        Found %d performance/security bottlenecks:\n\n\
        %s"
@@ -244,7 +244,7 @@ let generate_comprehensive_report (analysis: circuit_analysis) : string =
     generate_performance_report analysis.performance;  
     generate_security_report analysis.security;
     generate_bottleneck_report analysis.bottlenecks;
-    Printf.sprintf "📊 Analysis completed at %s with Camellia Analysis Engine v%s"
+    Printf.sprintf "[STATS] Analysis completed at %s with Camellia Analysis Engine v%s"
       (let tm = Unix.localtime analysis.analysis_timestamp in
        Printf.sprintf "%04d-%02d-%02d %02d:%02d:%02d" 
          (tm.tm_year + 1900) (tm.tm_mon + 1) tm.tm_mday tm.tm_hour tm.tm_min tm.tm_sec)

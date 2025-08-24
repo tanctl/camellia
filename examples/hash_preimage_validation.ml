@@ -71,11 +71,11 @@ let validate_hash_preimage_r1cs () =
       (float_of_int analysis.parallelizable_constraints /. float_of_int stats.num_constraints *. 100.0);
     
     Printf.printf "\nSECURITY ANALYSIS:\n";
-    Printf.printf "  Zero-Knowledge: ✅ Private inputs properly isolated\n";
-    Printf.printf "  Completeness: ✅ Valid proofs can be generated\n";
-    Printf.printf "  Soundness: ✅ Invalid proofs cannot be forged\n";
-    Printf.printf "  Field Security: ✅ BN254 provides 128-bit security\n";
-    Printf.printf "  Hash Function: ✅ Poseidon is ZK-SNARK friendly\n";
+    Printf.printf "  Zero-Knowledge: SUCCESS: Private inputs properly isolated\n";
+    Printf.printf "  Completeness: SUCCESS: Valid proofs can be generated\n";
+    Printf.printf "  Soundness: SUCCESS: Invalid proofs cannot be forged\n";
+    Printf.printf "  Field Security: SUCCESS: BN254 provides 128-bit security\n";
+    Printf.printf "  Hash Function: SUCCESS: Poseidon is ZK-SNARK friendly\n";
     
     (* validate constraint system mathematically *)
     Printf.printf "\nMATHEMATICAL VALIDATION:\n";
@@ -94,14 +94,14 @@ let validate_hash_preimage_r1cs () =
      | Ok witness ->
          let validation = check_witness_satisfiability compiled.r1cs_system witness |> Result.get_ok in
          Printf.printf "  Constraint System: %s\n" 
-           (if List.length validation.constraint_results > 0 then "✅ Well-formed" else "❌ Malformed");
-         Printf.printf "  Witness Generation: ✅ Example witness created\n";
-         Printf.printf "  Validation Framework: ✅ Mathematical validation works\n";
+           (if List.length validation.constraint_results > 0 then "SUCCESS: Well-formed" else "ERROR: Malformed");
+         Printf.printf "  Witness Generation: SUCCESS: Example witness created\n";
+         Printf.printf "  Validation Framework: SUCCESS: Mathematical validation works\n";
          
          (* detailed constraint analysis *)
          Printf.printf "  Constraint Details:\n";
          Output.take_n validation.constraint_results 3 |> List.iteri (fun _j (constraint_id, satisfied, details) ->
-           let status = if satisfied then "✅" else "⚠️" in
+           let status = if satisfied then "OK" else "WARN" in
            Printf.printf "    C%d %s: %s\n" constraint_id status 
              (if String.length details > 60 then String.sub details 0 60 ^ "..." else details)
          );
@@ -110,7 +110,7 @@ let validate_hash_preimage_r1cs () =
            Printf.printf "    ... (%d more constraints)\n" (List.length validation.constraint_results - 3)
            
      | Error err ->
-         Printf.printf "  Witness Generation: ❌ %s\n" (Error.error_to_string err)
+         Printf.printf "  Witness Generation: ERROR: %s\n" (Error.error_to_string err)
     );
     
     Printf.printf "\nR1CS QUALITY METRICS:\n";
@@ -134,30 +134,30 @@ let validate_hash_preimage_r1cs () =
   ) circuits;
   
   Printf.printf "=== OVERALL ASSESSMENT ===\n";
-  Printf.printf "Hash Preimage Circuit Implementation: ✅ MATHEMATICALLY SOUND\n\n";
+  Printf.printf "Hash Preimage Circuit Implementation: SUCCESS: MATHEMATICALLY SOUND\n\n";
   
   Printf.printf "SECURITY PROPERTIES VERIFIED:\n";
-  Printf.printf "✅ Zero-Knowledge: Private preimages never revealed\n";
-  Printf.printf "✅ Completeness: Honest provers can always prove knowledge\n";
-  Printf.printf "✅ Soundness: Malicious provers cannot forge proofs\n";
-  Printf.printf "✅ Efficiency: Practical constraint counts for all variants\n";
-  Printf.printf "✅ Scalability: Linear growth with input complexity\n\n";
+  Printf.printf "SUCCESS: Zero-Knowledge: Private preimages never revealed\n";
+  Printf.printf "SUCCESS: Completeness: Honest provers can always prove knowledge\n";
+  Printf.printf "SUCCESS: Soundness: Malicious provers cannot forge proofs\n";
+  Printf.printf "SUCCESS: Efficiency: Practical constraint counts for all variants\n";
+  Printf.printf "SUCCESS: Scalability: Linear growth with input complexity\n\n";
   
   Printf.printf "R1CS VALIDATION COMPLETE:\n";
-  Printf.printf "✅ All constraint systems are well-formed\n";
-  Printf.printf "✅ Mathematical relationships are correctly encoded\n";
-  Printf.printf "✅ Field arithmetic is properly constrained\n";
-  Printf.printf "✅ Hash function calls are correctly integrated\n";
-  Printf.printf "✅ Equality constraints are mathematically sound\n\n";
+  Printf.printf "SUCCESS: All constraint systems are well-formed\n";
+  Printf.printf "SUCCESS: Mathematical relationships are correctly encoded\n";
+  Printf.printf "SUCCESS: Field arithmetic is properly constrained\n";
+  Printf.printf "SUCCESS: Hash function calls are correctly integrated\n";
+  Printf.printf "SUCCESS: Equality constraints are mathematically sound\n\n";
   
   Printf.printf "PRODUCTION READINESS:\n";
-  Printf.printf "✅ Ready for integration with ZK proof systems\n";
-  Printf.printf "✅ Compatible with standard R1CS toolchains\n";
-  Printf.printf "✅ Comprehensive output formats available\n";
-  Printf.printf "✅ Mathematical validation framework complete\n";
-  Printf.printf "✅ Performance characteristics well understood\n\n";
+  Printf.printf "SUCCESS: Ready for integration with ZK proof systems\n";
+  Printf.printf "SUCCESS: Compatible with standard R1CS toolchains\n";
+  Printf.printf "SUCCESS: Comprehensive output formats available\n";
+  Printf.printf "SUCCESS: Mathematical validation framework complete\n";
+  Printf.printf "SUCCESS: Performance characteristics well understood\n\n";
   
   Printf.printf "The Camellia ZK Compiler hash preimage circuits are\n";
-  Printf.printf "MATHEMATICALLY SOUND and PRODUCTION READY! 🎉\n"
+  Printf.printf "MATHEMATICALLY SOUND and PRODUCTION READY!\n"
 
 let () = validate_hash_preimage_r1cs ()
